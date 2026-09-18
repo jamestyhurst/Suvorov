@@ -44,7 +44,10 @@ the top of that file. The field that matters most is **where the idea came from*
 specific Clausewitz feature, the other game or engine, general engineering practice, or James.
 
 Language, libraries, file formats, and architecture are all open decisions. Record each one
-like any other decision; none of them is settled by this brief.
+like any other decision; none of them is settled by this brief. On language, James
+(2026-09-18):
+
+> C++ might be a good language for an actual game engine, but I'm more familiar with Python
 
 ## Environment
 
