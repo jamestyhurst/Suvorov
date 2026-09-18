@@ -49,9 +49,18 @@ like any other decision; none of them is settled by this brief. On language, Jam
 
 > C++ might be a good language for an actual game engine, but I'm more familiar with Python
 
+and, later the same day:
+
+> I'm not as used to reading C++ as I am reading Python, but C++ is probably a better game
+> engine language. This might be a reasonable opportunity for reading C++
+
 ## Environment
 
 - Windows school PC with **no admin rights**. Never use anything that triggers UAC, writes to
   Program Files or other system folders, or needs elevation. Use per-user installs.
 - Default shell is PowerShell 7.
 - Python is a per-user install (3.12 on the school PC; other devices may differ).
+- The school PC has **no C++ compiler and no CMake** on its PATH (checked 2026-09-18).
+- The school PC's IT monitoring raises an alert when new software is installed. **Ask James
+  before installing anything**, including compilers, runtimes, and CLI tools, and say what
+  the install is for.
