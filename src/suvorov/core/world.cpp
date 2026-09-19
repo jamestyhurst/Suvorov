@@ -4,48 +4,9 @@
 #include <utility>
 
 namespace suvorov {
-namespace {
 
-bool is_leap_year(int year) {
-    return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
-}
-
-int days_in_month(int year, int month) {
-    switch (month) {
-    case 2:
-        return is_leap_year(year) ? 29 : 28;
-    case 4:
-    case 6:
-    case 9:
-    case 11:
-        return 30;
-    default:
-        return 31;
-    }
-}
-
-}  // namespace
-
-void Date::advance_one_day() {
-    ++day;
-    if (day <= days_in_month(year, month)) {
-        return;
-    }
-
-    day = 1;
-    ++month;
-    if (month <= 12) {
-        return;
-    }
-
-    month = 1;
-    ++year;
-}
-
-World::World(int year, int month, int day)
-    : current_date_{year, month, day} {
-    if (month < 1 || month > 12 || day < 1 ||
-        day > days_in_month(year, month)) {
+World::World(int year, int month, int day) : current_date_{year, month, day} {
+    if (!current_date_.valid()) {
         throw std::invalid_argument("World date is invalid");
     }
 }
@@ -67,32 +28,80 @@ const std::string& World::polity_name(std::uint32_t polity_id) const {
     return polities_[polity_id];
 }
 
-std::uint32_t World::add_person(std::string name, std::uint32_t polity_id) {
+std::uint32_t World::add_location(std::string name) {
     if (name.empty()) {
-        throw std::invalid_argument("Person name cannot be empty");
-    }
-    if (polity_id >= polities_.size()) {
-        throw std::out_of_range("Polity id does not exist");
+        throw std::invalid_argument("Location name cannot be empty");
     }
 
-    persons_.push_back(Person{std::move(name), polity_id});
+    locations_.push_back(std::move(name));
+    return static_cast<std::uint32_t>(locations_.size() - 1);
+}
+
+const std::string& World::location_name(std::uint32_t location_id) const {
+    if (location_id >= locations_.size()) {
+        throw std::out_of_range("Location id does not exist");
+    }
+
+    return locations_[location_id];
+}
+
+std::uint32_t World::add_person(Person person) {
+    if (person.names.empty()) {
+        throw std::invalid_argument("Person must have at least one name");
+    }
+    for (const auto& name : person.names) {
+        if (name.empty()) {
+            throw std::invalid_argument("Person name cannot be empty");
+        }
+    }
+
+    if (person.allegiances.empty()) {
+        throw std::invalid_argument("Person must have at least one allegiance");
+    }
+    for (const auto allegiance : person.allegiances) {
+        if (allegiance >= polities_.size()) {
+            throw std::out_of_range("Polity id does not exist");
+        }
+    }
+
+    if (!person.birth_date.valid()) {
+        throw std::invalid_argument("Person birth date is invalid");
+    }
+    if (current_date_ < person.birth_date) {
+        throw std::invalid_argument("Person birth date is after the world date");
+    }
+
+    if (person.birth_location_id >= locations_.size() ||
+        person.current_location_id >= locations_.size()) {
+        throw std::out_of_range("Location id does not exist");
+    }
+
+    persons_.push_back(std::move(person));
     return static_cast<std::uint32_t>(persons_.size() - 1);
 }
 
-const std::string& World::person_name(std::uint32_t person_id) const {
+const Person& World::person(std::uint32_t person_id) const {
     if (person_id >= persons_.size()) {
         throw std::out_of_range("Person id does not exist");
     }
 
-    return persons_[person_id].name;
+    return persons_[person_id];
 }
 
-std::uint32_t World::person_polity(std::uint32_t person_id) const {
+int World::person_age(std::uint32_t person_id) const {
+    return biological_age(person(person_id).birth_date, current_date_);
+}
+
+void World::set_person_location(std::uint32_t person_id,
+                               std::uint32_t location_id) {
     if (person_id >= persons_.size()) {
         throw std::out_of_range("Person id does not exist");
     }
+    if (location_id >= locations_.size()) {
+        throw std::out_of_range("Location id does not exist");
+    }
 
-    return persons_[person_id].polity_id;
+    persons_[person_id].current_location_id = location_id;
 }
 
 void World::advance_one_day() {

@@ -9,12 +9,16 @@ Agents: start with [AGENTS.md](AGENTS.md). Design history: [docs/decisions.md](d
 
 The simulation core is a deterministic `World`:
 
-- `World` owns the simulation date, named polities, and named persons.
-- A person has an integer id, a non-empty name, and a required polity. No location, age,
-  title, death, or traits in this slice.
+- `World` owns the simulation date, named polities, named locations, and persons.
+- `Person` is a public data struct: one or more names, one or more polity allegiances, a
+  birth date, a birth location id, and a current location id.
+- Biological age is derived from birth date and the world date (completed years).
+- Locations are named ids only. There is no map: no adjacency, territory, or travel time.
 - `advance_one_day()` moves the simulation clock by exactly one calendar day.
-- Invalid dates and unknown polity or person identifiers are rejected through the public API.
-- Rendering, input, map, economy, diplomacy, and military systems remain outside the core.
+- Invalid dates and unknown polity, location, or person identifiers are rejected through
+  the public API.
+- Rendering, input, map geography, economy, diplomacy, and military systems remain outside
+  the core.
 
 ## Build and test
 

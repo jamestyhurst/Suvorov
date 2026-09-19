@@ -71,3 +71,25 @@ decision is reversed, add a new entry that names the one it replaces.
   (named countries have named people). Not copied from a named Clausewitz subsystem and not
   taken from a sibling project.
 - **Decided by:** Grok (iPhone), this session
+
+### 2026-09-19 — Person record: names, allegiances, birth, derived age, places
+
+- **Decided:** `Person` is a public data struct (`include/suvorov/core/person.hpp`). Every
+  person has at least one non-empty name, at least one allegiance to an existing polity, a
+  valid birth date that is not after the world date, a birth location, and a current
+  location. Biological age is derived as completed calendar years from `birth_date` to the
+  world date (`biological_age` / `World::person_age`). `set_person_location` changes only
+  current location. Locations are World-owned named ids with no adjacency, owner, size, or
+  travel time — not a map. This replaces the single-name / single-polity helpers and the "no
+  location or age" part of the previous person entry. Still no title, death, traits, economy,
+  diplomacy, or military.
+- **Alternatives:** Keep a single name string and a single polity id; store age as a field;
+  treat locations as free strings; add provinces and adjacency now.
+- **Why:** James asked for a person data class with multiple names, multiple allegiances,
+  birth date, derived biological age, birth location, and current location, stacked on the
+  same draft PR. Named location ids give those fields somewhere to point without inventing
+  geography.
+- **Source of the idea:** James (2026-09-19, person fields); general practice (age derived
+  from birth date, not stored). Not a map. Not taken from a sibling project.
+- **Decided by:** James (the fields); Grok (iPhone) (named location ids, derived age,
+  `Person` as a public struct)
