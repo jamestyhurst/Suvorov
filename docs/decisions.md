@@ -34,7 +34,7 @@ decision is reversed, add a new entry that names the one it replaces.
 - **Alternatives:** Python for the whole core (James is more fluent in it); defer the language
   until a compiler is installed on the school PC.
 - **Why:** James (2026-09-18, quoted in `AGENTS.md`) named C++ as the better game-engine
-  language and a reasonable chance to practise reading it. Copilot on this device (Zhantianzhe)
+  language and a reasonable chance to practise reading C++. Copilot on this device (Zhantianzhe)
   had already written the C++ slice uncommitted; this entry records that choice instead of
   leaving language "open" while C++ files exist. The school PC still has no compiler or CMake
   on PATH — building is blocked until James approves a per-user install.
@@ -55,3 +55,19 @@ decision is reversed, add a new entry that names the one it replaces.
   clock as the first engine object). Not copied from a named Clausewitz subsystem.
 - **Decided by:** James, this session (chose the World-date-and-polities slice as the work to
   finish)
+
+### 2026-09-19 — Named persons belong to a polity
+
+- **Decided:** The next core object after date + named polities is a person: an integer id, a
+  non-empty name, and a required existing polity id. `World` exposes `add_person`,
+  `person_name`, and `person_polity`. Persons have no location, age, title, death, traits, or
+  tick side effects. `advance_one_day()` still only moves the calendar.
+- **Alternatives:** A player-controlled polity field; a scheduled-event queue; provinces or a
+  map; leave polities as labels with no people.
+- **Why:** James's standing rule is simplest-first. A polity with no people is only a label.
+  Persons reuse the existing integer-id pattern and stay testable on the public API without a
+  map, economy, diplomacy, military, or renderer.
+- **Source of the idea:** James (simplest first, 2026-09-01); general grand-strategy practice
+  (named countries have named people). Not copied from a named Clausewitz subsystem and not
+  taken from a sibling project.
+- **Decided by:** Grok (iPhone), this session

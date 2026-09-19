@@ -20,12 +20,21 @@ public:
 
     std::uint32_t add_polity(std::string name);
     const std::string& polity_name(std::uint32_t polity_id) const;
+    std::uint32_t add_person(std::string name, std::uint32_t polity_id);
+    const std::string& person_name(std::uint32_t person_id) const;
+    std::uint32_t person_polity(std::uint32_t person_id) const;
     void advance_one_day();
     Date date() const;
 
 private:
+    struct Person {
+        std::string name;
+        std::uint32_t polity_id;
+    };
+
     Date current_date_;
     std::vector<std::string> polities_;
+    std::vector<Person> persons_;
 };
 
 }  // namespace suvorov

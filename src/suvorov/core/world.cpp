@@ -67,6 +67,34 @@ const std::string& World::polity_name(std::uint32_t polity_id) const {
     return polities_[polity_id];
 }
 
+std::uint32_t World::add_person(std::string name, std::uint32_t polity_id) {
+    if (name.empty()) {
+        throw std::invalid_argument("Person name cannot be empty");
+    }
+    if (polity_id >= polities_.size()) {
+        throw std::out_of_range("Polity id does not exist");
+    }
+
+    persons_.push_back(Person{std::move(name), polity_id});
+    return static_cast<std::uint32_t>(persons_.size() - 1);
+}
+
+const std::string& World::person_name(std::uint32_t person_id) const {
+    if (person_id >= persons_.size()) {
+        throw std::out_of_range("Person id does not exist");
+    }
+
+    return persons_[person_id].name;
+}
+
+std::uint32_t World::person_polity(std::uint32_t person_id) const {
+    if (person_id >= persons_.size()) {
+        throw std::out_of_range("Person id does not exist");
+    }
+
+    return persons_[person_id].polity_id;
+}
+
 void World::advance_one_day() {
     current_date_.advance_one_day();
 }

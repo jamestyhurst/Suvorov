@@ -15,12 +15,25 @@ int main() {
     assert(second_id != polity_id);
     assert(world.polity_name(second_id) == "Helia");
 
+    const auto person_id = world.add_person("Calen", polity_id);
+    assert(world.person_name(person_id) == "Calen");
+    assert(world.person_polity(person_id) == polity_id);
+
+    const auto same_polity_person = world.add_person("Mira", polity_id);
+    assert(same_polity_person != person_id);
+    assert(world.person_polity(same_polity_person) == polity_id);
+
+    const auto other_polity_person = world.add_person("Ryn", second_id);
+    assert(world.person_polity(other_polity_person) == second_id);
+
     world.advance_one_day();
 
     const auto date = world.date();
     assert(date.year == 2024);
     assert(date.month == 1);
     assert(date.day == 2);
+    assert(world.person_name(person_id) == "Calen");
+    assert(world.person_polity(person_id) == polity_id);
 
     suvorov::World end_of_year{2024, 12, 31};
     end_of_year.advance_one_day();
@@ -71,4 +84,36 @@ int main() {
         rejected_unknown_id = true;
     }
     assert(rejected_unknown_id);
+
+    bool rejected_empty_person_name = false;
+    try {
+        world.add_person("", polity_id);
+    } catch (const std::invalid_argument&) {
+        rejected_empty_person_name = true;
+    }
+    assert(rejected_empty_person_name);
+
+    bool rejected_unknown_person_polity = false;
+    try {
+        world.add_person("Calen", 99);
+    } catch (const std::out_of_range&) {
+        rejected_unknown_person_polity = true;
+    }
+    assert(rejected_unknown_person_polity);
+
+    bool rejected_unknown_person = false;
+    try {
+        (void)world.person_name(99);
+    } catch (const std::out_of_range&) {
+        rejected_unknown_person = true;
+    }
+    assert(rejected_unknown_person);
+
+    bool rejected_unknown_person_polity_lookup = false;
+    try {
+        (void)world.person_polity(99);
+    } catch (const std::out_of_range&) {
+        rejected_unknown_person_polity_lookup = true;
+    }
+    assert(rejected_unknown_person_polity_lookup);
 }

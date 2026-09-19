@@ -7,11 +7,13 @@ Agents: start with [AGENTS.md](AGENTS.md). Design history: [docs/decisions.md](d
 
 ## Current foundation
 
-The first vertical slice is a deterministic simulation core:
+The simulation core is a deterministic `World`:
 
-- `World` owns the simulation date and named polities.
+- `World` owns the simulation date, named polities, and named persons.
+- A person has an integer id, a non-empty name, and a required polity. No location, age,
+  title, death, or traits in this slice.
 - `advance_one_day()` moves the simulation clock by exactly one calendar day.
-- Invalid dates and unknown polity identifiers are rejected through the public API.
+- Invalid dates and unknown polity or person identifiers are rejected through the public API.
 - Rendering, input, map, economy, diplomacy, and military systems remain outside the core.
 
 ## Build and test
