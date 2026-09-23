@@ -35,7 +35,7 @@ Teutoburg."* Consider adding that sentence to the rule so the next agent underst
 is protecting, and note that the session of 2026-09-22 breached it — recorded in
 `games\premyslid\docs\decisions.md`.
 
-## 3. `docs\decisions.md` — three entries to append
+## 3. `docs\decisions.md` — four entries to append
 
 ```markdown
 ### 2026-09-22 — Games may have settings; the engine may not
@@ -63,6 +63,19 @@ is protecting, and note that the session of 2026-09-22 breached it — recorded 
   sessions are barred from touching engine code, so a task they cannot complete becomes a
   written report of a missing engine capability rather than a quiet workaround.
 - **Source of the idea:** James
+- **Decided by:** James
+
+### 2026-09-22 — Session handoffs are tracked in the repository
+
+- **Decided:** Session handoffs live in `Handoffs\` and are committed, following the same
+  convention as Greco and Teutoburg. Naming is `YYYY-MM-DD-topic-slug.md`. A handoff whose work
+  is finished moves to `Handoffs\handled\` rather than being deleted.
+- **Alternatives:** Leaving handoffs in the operating system's temporary folder, which is what
+  the `/handoff` skill defaults to when a project has no such folder.
+- **Why:** James asked for the folder once the first handoff had been written to temp. A
+  handoff that only exists on one machine is invisible to a session running anywhere else,
+  which defeats the reason for writing one.
+- **Source of the idea:** James; Greco and Teutoburg (the existing convention)
 - **Decided by:** James
 
 ### 2026-09-22 — Rendering starts with PyGame, for Suvorov as a whole

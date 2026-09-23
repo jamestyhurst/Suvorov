@@ -24,4 +24,9 @@ the engine, or judging whether the project is going the way it was meant to.
 
 - `docs\decisions.md` — engine-level decisions for Suvorov itself.
 - `games\premyslid\docs\decisions.md` — decisions about the Premyslid game.
+- `Handoffs\` — session handoffs, written so the next session can continue the work.
 - `CONCEPTS.md` — the pointer index into the shared concept notes.
+
+The difference between this folder and `Handoffs\`: these documents describe how things are
+and why, and stay true until the design changes. A handoff describes a moment — where the work
+stopped and what to do next — and goes stale by design.
