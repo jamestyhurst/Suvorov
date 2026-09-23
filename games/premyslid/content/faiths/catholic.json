@@ -1,0 +1,6 @@
+{
+  "id": "catholic",
+  "name": "Catholic",
+  "group": "christian",
+  "sources": ["https://en.wikipedia.org/wiki/Catholic_Church"]
+}

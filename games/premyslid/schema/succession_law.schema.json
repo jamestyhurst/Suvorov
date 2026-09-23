@@ -1,0 +1,24 @@
+{
+  "$id": "succession_law.schema.json",
+  "title": "Succession law",
+  "description": "How a title passes when its holder dies. The law is the reason this game is a Crusader Kings clone rather than a map-painting game, so it gets its own record kind rather than being an enum on a title.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "kind", "gender_law"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "kind": {
+      "type": "string",
+      "enum": ["primogeniture", "ultimogeniture", "gavelkind", "seniority", "elective", "appointment"],
+      "description": "Primogeniture: eldest child. Ultimogeniture: youngest. Gavelkind: divided among children. Seniority: eldest dynasty member. Elective: chosen by electors. Appointment: chosen by the liege."
+    },
+    "gender_law": {
+      "type": "string",
+      "enum": ["agnatic", "agnatic_cognatic", "absolute_cognatic", "enatic"],
+      "description": "Agnatic: men only. Agnatic-cognatic: women inherit only when no man qualifies. Absolute cognatic: birth order regardless of sex. Enatic: women only."
+    },
+    "description": { "type": "string", "description": "Prose explanation of how this law divides a realm, written for a reader who has not played Crusader Kings." },
+    "sources": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$id": "title.schema.json",
+  "title": "Title",
+  "description": "A landed title: an empire, kingdom, duchy, county, or barony.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "tier", "name"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(e|k|d|c|b)_[a-z0-9_]+$",
+      "description": "Tier prefix followed by a lowercase name. Must equal the file name."
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["empire", "kingdom", "duchy", "county", "barony"],
+      "description": "Must agree with the id prefix: e, k, d, c, b in that order."
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "de_jure_liege": {
+      "type": ["string", "null"],
+      "x-ref": "titles",
+      "description": "The title one tier above this one. Null only for the top of a hierarchy."
+    },
+    "capital": {
+      "type": ["string", "null"],
+      "x-ref": "titles",
+      "description": "For a county, the barony that is its capital. For higher tiers, the title one tier below that holds the seat of power."
+    },
+    "holder": {
+      "type": ["string", "null"],
+      "x-ref": "characters",
+      "description": "The character holding this title at the scenario start date. Null means the title is uncreated or unheld."
+    },
+    "succession_law": {
+      "type": ["string", "null"],
+      "x-ref": "succession_laws",
+      "description": "Required for duchy tier and above. Counties and baronies inherit their liege's law in version 0."
+    },
+    "culture": { "type": ["string", "null"], "x-ref": "cultures" },
+    "faith": { "type": ["string", "null"], "x-ref": "faiths" },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Public sources for the historical claims in this record. At least one is required for any record naming a real place or person."
+    }
+  }
+}

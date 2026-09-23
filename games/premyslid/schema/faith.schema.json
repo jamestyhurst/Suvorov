@@ -1,0 +1,13 @@
+{
+  "$id": "faith.schema.json",
+  "title": "Faith",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "group"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "group": { "type": "string", "minLength": 1, "description": "The religious group, such as christian." },
+    "sources": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

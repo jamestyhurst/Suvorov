@@ -1,0 +1,35 @@
+{
+  "$id": "character.schema.json",
+  "title": "Character",
+  "description": "One person. Characters are the centre of this game: titles pass between them, opinion is held by them, and the scenario is the state of a family tree on a single day.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "sex", "birth"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string", "minLength": 1, "description": "Given name only. The dynasty supplies the family name." },
+    "sex": { "type": "string", "enum": ["male", "female"] },
+    "birth": { "type": "string", "x-date": true },
+    "death": {
+      "type": ["string", "null"],
+      "x-date": true,
+      "description": "Null means the character is alive at the scenario start date and their death is not yet scripted."
+    },
+    "dynasty": { "type": ["string", "null"], "x-ref": "dynasties", "description": "Null for lowborn characters." },
+    "father": { "type": ["string", "null"], "x-ref": "characters" },
+    "mother": { "type": ["string", "null"], "x-ref": "characters" },
+    "spouses": {
+      "type": "array",
+      "items": { "type": "string", "x-ref": "characters" },
+      "description": "Every marriage, living or ended. Version 0 does not model when a marriage began or how it ended."
+    },
+    "culture": { "type": ["string", "null"], "x-ref": "cultures" },
+    "faith": { "type": ["string", "null"], "x-ref": "faiths" },
+    "traits": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["brave", "craven", "just", "arbitrary", "content", "ambitious", "chaste", "lustful", "humble", "proud", "patient", "wroth", "temperate", "gluttonous", "charitable", "greedy", "diligent", "slothful", "kind", "cruel", "trusting", "deceitful", "zealous", "cynical"] },
+      "description": "Version 0 carries the twelve virtue and vice pairs only. Congenital traits, lifestyle traits, and illnesses are out of scope until an engine exists to apply their effects."
+    },
+    "sources": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

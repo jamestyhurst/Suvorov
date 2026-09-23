@@ -1,0 +1,12 @@
+{
+  "id": "c_praha",
+  "tier": "county",
+  "name": "Praha",
+  "de_jure_liege": "d_bohemia",
+  "capital": "b_praha",
+  "holder": "vratislav_ii",
+  "succession_law": null,
+  "culture": "czech",
+  "faith": "catholic",
+  "sources": ["https://en.wikipedia.org/wiki/Prague"]
+}

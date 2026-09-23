@@ -1,0 +1,12 @@
+{
+  "id": "d_bohemia",
+  "tier": "duchy",
+  "name": "Bohemia",
+  "de_jure_liege": null,
+  "capital": "c_praha",
+  "holder": "vratislav_ii",
+  "succession_law": "agnatic_seniority",
+  "culture": "czech",
+  "faith": "catholic",
+  "sources": ["https://en.wikipedia.org/wiki/Duchy_of_Bohemia"]
+}

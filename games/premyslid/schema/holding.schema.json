@@ -1,0 +1,18 @@
+{
+  "$id": "holding.schema.json",
+  "title": "Holding",
+  "description": "A settlement inside a county. Baronies are titles; this record adds the settlement detail that hangs off one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "county", "type"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^b_[a-z0-9_]+$" },
+    "county": { "type": "string", "x-ref": "titles", "description": "The county this holding sits in." },
+    "type": {
+      "type": "string",
+      "enum": ["castle", "city", "temple"],
+      "description": "Castle, city, and temple are the three holding types in version 0, matching the Crusader Kings pattern of a secular seat, a trading settlement, and a religious one."
+    },
+    "sources": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

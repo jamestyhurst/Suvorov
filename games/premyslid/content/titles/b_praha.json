@@ -1,0 +1,12 @@
+{
+  "id": "b_praha",
+  "tier": "barony",
+  "name": "Prague Castle",
+  "de_jure_liege": "c_praha",
+  "capital": null,
+  "holder": "vratislav_ii",
+  "succession_law": null,
+  "culture": "czech",
+  "faith": "catholic",
+  "sources": ["https://en.wikipedia.org/wiki/Prague_Castle"]
+}

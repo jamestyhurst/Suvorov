@@ -1,0 +1,38 @@
+{
+  "comment": "The target scope of the scenario. The `next` tool computes work by comparing this plan against the records in content/, so anything absent from this file will never be handed out as a task. This file is protected: free models may not edit it.",
+  "start_date": "1066-09-15",
+  "exemplar_duchy": "d_bohemia",
+  "bulk_unlocked": false,
+  "bulk_unlock_note": "Set to true only after the engine runs a succession loop. Until then `next` hands out work inside the exemplar duchy and research tasks, and nothing else. See docs/decisions.md.",
+  "holdings_per_county": 3,
+  "exemplar_event_budget": 3,
+  "hierarchy": [
+    {
+      "id": "k_bohemia",
+      "tier": "kingdom",
+      "priority": 1,
+      "duchies": [
+        {
+          "id": "d_bohemia",
+          "priority": 1,
+          "counties": [
+            "c_praha",
+            "c_kourim",
+            "c_boleslav",
+            "c_litomerice",
+            "c_zatec",
+            "c_plzen",
+            "c_bechyne",
+            "c_hradec"
+          ]
+        },
+        {
+          "id": "d_moravia",
+          "priority": 2,
+          "counties": ["c_olomouc", "c_brno", "c_znojmo"]
+        }
+      ]
+    }
+  ],
+  "accuracy_note": "The county lists above are a starting target, not a verified historical administrative map of eleventh-century Bohemia. Research tasks exist to confirm, correct, or replace them; a research finding that contradicts this file is a reason to change this file, which is a decision for James rather than for a content session."
+}

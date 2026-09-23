@@ -1,0 +1,15 @@
+{
+  "id": "vratislav_ii",
+  "name": "Vratislav",
+  "sex": "male",
+  "birth": "1032-01-01",
+  "death": "1092-01-14",
+  "dynasty": "premyslid",
+  "father": null,
+  "mother": null,
+  "spouses": [],
+  "culture": "czech",
+  "faith": "catholic",
+  "traits": ["ambitious", "diligent"],
+  "sources": ["https://en.wikipedia.org/wiki/Vratislaus_II_of_Bohemia"]
+}
