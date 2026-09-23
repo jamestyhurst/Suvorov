@@ -1,0 +1,13 @@
+{
+  "$id": "culture.schema.json",
+  "title": "Culture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "group"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "group": { "type": "string", "minLength": 1, "description": "The culture group, such as west_slavic. Groups have no record of their own in version 0." },
+    "sources": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

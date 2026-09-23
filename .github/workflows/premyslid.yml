@@ -1,0 +1,102 @@
+name: Premyslid content
+
+# The automated review step for content written by free models. There is no human in this
+# loop by design, so everything that would otherwise be caught by review has to be caught
+# here: the schema, the semantic rules, and the boundary between game content and engine.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run the test suite
+        working-directory: python
+        run: python -m unittest discover -s tests -t .
+
+      - name: Validate game content
+        working-directory: python
+        run: python -m suvorov.tools.validate
+
+      - name: Identify content sessions
+        id: session
+        if: github.event_name == 'pull_request'
+        run: |
+          # A content session is identified by the Model trailer its finish script writes.
+          # Pull requests without one are human or strong-model work, and the write boundary
+          # below does not apply to them.
+          base="origin/${{ github.base_ref }}"
+          if git log "$base..HEAD" --format='%b' | grep -q '^Model:'; then
+            echo "is_content_session=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_content_session=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Enforce the write boundary
+        if: steps.session.outputs.is_content_session == 'true'
+        run: |
+          # Content sessions may write game content and research, and nothing else. This is a
+          # mechanical check rather than an instruction because a small model cannot be relied
+          # on to follow an instruction it finds inconvenient.
+          base="origin/${{ github.base_ref }}"
+          changed="$(git diff --name-only "$base..HEAD")"
+          forbidden="$(printf '%s\n' "$changed" \
+            | grep -v '^games/premyslid/content/' \
+            | grep -v '^games/premyslid/research/' || true)"
+          if [ -n "$forbidden" ]; then
+            echo "This content session changed files outside its two writable folders:" >&2
+            printf '  %s\n' $forbidden >&2
+            echo "" >&2
+            echo "The schema, the plan, and all engine code are protected. If the task could" >&2
+            echo "not be done without changing one of them, that is a finding: write it up in" >&2
+            echo "games/premyslid/research/blocked-<task id>.md instead." >&2
+            exit 1
+          fi
+
+      - name: Report session metrics
+        if: always()
+        working-directory: python
+        run: |
+          {
+            echo '## Premyslid sessions'
+            echo ''
+            echo '```'
+            python -m suvorov.tools.metrics || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  merge:
+    # Content sessions merge themselves once the checks pass. Anything else waits for James.
+    needs: check
+    if: github.event_name == 'pull_request' && needs.check.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enable auto-merge for content sessions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          base="origin/${{ github.base_ref }}"
+          if ! git log "$base..HEAD" --format='%b' | grep -q '^Model:'; then
+            echo "Not a content session; leaving this pull request for review."
+            exit 0
+          fi
+          gh pr merge "${{ github.event.pull_request.number }}" --auto --squash --delete-branch

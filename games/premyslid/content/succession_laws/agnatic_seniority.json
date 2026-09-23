@@ -1,0 +1,8 @@
+{
+  "id": "agnatic_seniority",
+  "name": "Agnatic seniority",
+  "kind": "seniority",
+  "gender_law": "agnatic",
+  "description": "The title passes to the oldest surviving male member of the ruling dynasty rather than to the previous holder's son. Bretislav I imposed this arrangement on Bohemia in 1055 to stop his sons dividing the duchy between them; in practice it produced repeated disputes, because a ruler's own son was passed over in favour of an uncle or a cousin.",
+  "sources": ["https://en.wikipedia.org/wiki/B%C5%99etislav_I", "https://en.wikipedia.org/wiki/Order_of_succession"]
+}

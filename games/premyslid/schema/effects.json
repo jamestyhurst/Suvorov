@@ -1,0 +1,27 @@
+{
+  "comment": "The frozen effect vocabulary for version 0. This file is the authority; event.schema.json repeats these names as enums so that a misspelled effect fails validation instead of silently doing nothing. Adding a name here is an engine decision, not a content decision, and belongs in docs/decisions.md.",
+  "version": 0,
+  "effects": {
+    "grant_title": {
+      "summary": "Gives the named title to the target character.",
+      "requires": ["title"],
+      "engine_status": "not implemented"
+    },
+    "kill_character": {
+      "summary": "Kills the target character on the day the event fires.",
+      "requires": [],
+      "engine_status": "not implemented"
+    },
+    "change_opinion": {
+      "summary": "Adds value to the target's opinion of the event root. Negative values lower it.",
+      "requires": ["value"],
+      "engine_status": "not implemented"
+    }
+  },
+  "targets": {
+    "root": "The character the event fired on.",
+    "holder": "The holder of the title in question.",
+    "liege": "The root's immediate liege.",
+    "primary_heir": "The character who would inherit the root's primary title today."
+  }
+}
