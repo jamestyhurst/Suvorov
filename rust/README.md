@@ -9,3 +9,10 @@ cargo run --release --bin suvorov-bench -- scan 20000 200 50 365
 ```
 
 See `../spikes/language-2026-09-29/` for the three-language comparison.
+
+Python bindings (optional feature `python`):
+
+```bash
+maturin develop --features python
+PYTHONPATH=../python python -m unittest discover -s ../python/tests -t ../python
+```

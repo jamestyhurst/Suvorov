@@ -9,7 +9,16 @@ publish = false
 [lib]
 name = "suvorov_core"
 path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
 
 [[bin]]
 name = "suvorov-bench"
 path = "src/bin/bench.rs"
+required-features = []
+
+[features]
+default = []
+python = ["dep:pyo3"]
+
+[dependencies]
+pyo3 = { version = "0.21.2", features = ["extension-module"], optional = true }

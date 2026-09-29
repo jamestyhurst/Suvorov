@@ -9,6 +9,9 @@ pub mod error;
 pub mod person;
 pub mod world;
 
+#[cfg(feature = "python")]
+mod python;
+
 pub use date::{biological_age, Date};
 pub use error::{Error, Result};
 pub use person::Person;
