@@ -19,8 +19,15 @@ Status: draft PR, not merged.
 - Install a compiler on the school PC without asking James.
 - Call the results file a designer note.
 
+## Also done later the same day
+
+- PyO3 module `suvorov_core` (`rust` feature `python`).
+- `python/suvorov/core.py` and `python/suvorov/load.py`.
+- Binding + fictional content-load tests. Does not copy `games/premyslid/`.
+
 ## Next if James wants more
 
-- PyO3 bindings so Premyslid Python tools can call the Rust core.
+- After #2/#3/#4 can see each other: wire `suvorov.tools.content.Game` into `world_from_records`.
+- Person death field, if dead characters must stay in World.
 - A larger bench (event queue, pathfinding stub) once those exist.
 - James ruling: Rust becomes core, or C++ on #2 stays, or keep experimenting.

@@ -42,3 +42,17 @@ decision is reversed, add a new entry that names the one it replaces.
   recorded language choice)
 - **Decided by:** James (do the spike and the Rust port); Grok from iPhone (layout:
   `rust/` + `spikes/`, do not touch PR #2)
+
+### 2026-09-29 — Premyslid talks to the core through Python bindings, not a second engine
+
+- **Decided:** Add an optional PyO3 surface on the Rust core and a setting-free loader
+  (`python/suvorov/load.py`) that accepts Premyslid-schema-shaped title and character
+  dicts. Do not copy `games/premyslid/` onto this branch. Do not make the Python tools
+  the tick loop.
+- **Alternatives:** Rewrite Premyslid tools against the C++ slice; embed Bohemian content
+  in engine tests; leave Python and Rust disconnected until a merge.
+- **Why:** James (2026-09-29) asked to go ahead with the Premyslid consumption idea from
+  the language-spike session. Engine tests stay fictional. PR #3 stays the content repo.
+- **Source of the idea:** James (Premyslid as first consumer); general practice (validate
+  in tools, simulate in the core)
+- **Decided by:** James (do the bridge); Grok from iPhone (PyO3 + loader mapping)
