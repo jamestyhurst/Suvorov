@@ -1,0 +1,40 @@
+name: Language spike
+
+on:
+  pull_request:
+  push:
+    branches:
+      - device/iphone/2026-09-29-language-spike
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Rust core
+        working-directory: rust
+        run: cargo test
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test Python spike
+        working-directory: spikes/language-2026-09-29/python
+        run: python -m unittest test_world.py
+
+  cpp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure and test C++ spike
+        run: |
+          cmake -S spikes/language-2026-09-29/cpp -B build-spike -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-spike --config Release
+          ./build-spike/suvorov_spike_tests
