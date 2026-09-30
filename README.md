@@ -5,9 +5,10 @@ Agents: start with [AGENTS.md](AGENTS.md). Design history: [docs/decisions.md](d
 
 ## Build and test (Rust)
 
-Requires a stable Rust toolchain (`cargo`); standard library only, no external crates.
+Requires a stable Rust toolchain (`cargo`). The core uses the standard library only; `pyo3` is an optional feature (see `rust/README.md`).
 
 ```
+cd rust
 cargo build
 cargo test
 cargo fmt --check
