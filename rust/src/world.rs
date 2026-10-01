@@ -10,6 +10,9 @@ pub struct World {
     adjacency: Vec<Vec<u32>>,
     owners: Vec<Option<u32>>,
     persons: Vec<Person>,
+    death_dates: Vec<Option<Date>>,
+    scheduled: Vec<(Date, String)>,
+    fired: Vec<String>,
 }
 
 impl World {
@@ -25,6 +28,9 @@ impl World {
             adjacency: Vec::new(),
             owners: Vec::new(),
             persons: Vec::new(),
+            death_dates: Vec::new(),
+            scheduled: Vec::new(),
+            fired: Vec::new(),
         })
     }
 
@@ -154,6 +160,7 @@ impl World {
             return Err(Error::OutOfRange("Location id does not exist"));
         }
         self.persons.push(person);
+        self.death_dates.push(None);
         Ok((self.persons.len() - 1) as u32)
     }
 
@@ -179,8 +186,66 @@ impl World {
         Ok(())
     }
 
+    /// Advance one day, then move events scheduled for the new date into the fired queue.
     pub fn advance_one_day(&mut self) {
         self.current_date.advance_one_day();
+        let today = self.current_date;
+        let (due, later): (Vec<_>, Vec<_>) = self
+            .scheduled
+            .drain(..)
+            .partition(|(date, _)| *date == today);
+        self.scheduled = later;
+        self.fired.extend(due.into_iter().map(|(_, name)| name));
+    }
+
+    /// Queue a named event to fire when the world reaches `date` (strictly in the future).
+    pub fn schedule_event(&mut self, date: Date, name: impl Into<String>) -> Result<()> {
+        let name = name.into();
+        if name.is_empty() {
+            return Err(Error::InvalidArgument("Event name cannot be empty"));
+        }
+        if !date.valid() {
+            return Err(Error::InvalidArgument("Event date is invalid"));
+        }
+        if date <= self.current_date {
+            return Err(Error::InvalidArgument(
+                "Event date must be after the world date",
+            ));
+        }
+        self.scheduled.push((date, name));
+        Ok(())
+    }
+
+    /// Take the events that fired since the last drain, in the order they were scheduled.
+    pub fn drain_fired_events(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.fired)
+    }
+
+    pub fn kill_person(&mut self, person_id: u32) -> Result<()> {
+        let slot = self
+            .death_dates
+            .get_mut(person_id as usize)
+            .ok_or(Error::OutOfRange("Person id does not exist"))?;
+        if slot.is_some() {
+            return Err(Error::InvalidArgument("Person is already dead"));
+        }
+        *slot = Some(self.current_date);
+        Ok(())
+    }
+
+    pub fn person_death_date(&self, person_id: u32) -> Result<Option<Date>> {
+        self.death_dates
+            .get(person_id as usize)
+            .copied()
+            .ok_or(Error::OutOfRange("Person id does not exist"))
+    }
+
+    pub fn is_alive(&self, person_id: u32) -> Result<bool> {
+        Ok(self.person_death_date(person_id)?.is_none())
+    }
+
+    pub fn living_person_count(&self) -> usize {
+        self.death_dates.iter().filter(|d| d.is_none()).count()
     }
 
     pub fn date(&self) -> Date {

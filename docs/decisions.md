@@ -117,3 +117,19 @@ decision is reversed, add a new entry that names the one it replaces.
 - **Why:** James: a cleaner architecture. The engine never sees the game's setting.
 - **Source of the idea:** James
 - **Decided by:** James
+
+### 2026-10-01 — Death is a world-side record; scheduled events fire into a queue
+
+- **Decided:** `World` records an optional death date per person (`kill_person`,
+  `is_alive`, `person_death_date`, `living_person_count`); `Person` itself is unchanged.
+  `World::schedule_event(date, name)` queues a named event for a strictly future date;
+  `advance_one_day` moves due events into a queue read with `drain_fired_events`. Events
+  carry only a name; there are no effects or triggers yet.
+- **Alternatives:** Add a `death_date` field to `Person` (breaks the PyO3 and bench
+  constructors now); have `advance_one_day` return the fired events; run callbacks inside
+  the tick.
+- **Why:** Simplest first. This answers PR #5 gate 4 (person death field) without an API
+  break, and the pull-style queue keeps the tick free of game logic.
+- **Source of the idea:** Clausewitz (date-scheduled events, pulses); general practice
+  (event queue)
+- **Decided by:** Claude (agent), on James's instruction (2026-10-01) to continue
