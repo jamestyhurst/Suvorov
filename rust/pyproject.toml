@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.4,<2"]
+build-backend = "maturin"
+
+[project]
+name = "suvorov_core"
+version = "0.1.0"
+requires-python = ">=3.10"
+description = "Python bindings for the Suvorov Rust simulation core"
+
+[tool.maturin]
+features = ["python"]
+module-name = "suvorov_core"
+manifest-path = "Cargo.toml"

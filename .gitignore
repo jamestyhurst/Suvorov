@@ -14,7 +14,15 @@ __pycache__/
 # Build output and caches
 build/
 .cache/
+spikes/language-2026-09-29/cpp/build/
+
+# Rust
+rust/target/
+**/target/
 
 # Agent tools
 .aider*
 .claude/settings.local.json
+
+# Rust
+target/
