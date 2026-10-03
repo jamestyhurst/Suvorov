@@ -13,14 +13,22 @@ pub enum Feature {
     Titles,
     Inheritance,
     Scripting,
+    Diplomacy,
+    Forces,
+    Intelligence,
+    FogOfWar,
 }
 
 impl Feature {
-    pub const ALL: [Feature; 4] = [
+    pub const ALL: [Feature; 8] = [
         Feature::Marriage,
         Feature::Titles,
         Feature::Inheritance,
         Feature::Scripting,
+        Feature::Diplomacy,
+        Feature::Forces,
+        Feature::Intelligence,
+        Feature::FogOfWar,
     ];
 
     /// Isolated suite under `rust/tests/`. The regime test fails if this file is missing.
@@ -30,6 +38,10 @@ impl Feature {
             Feature::Titles => "titles.rs",
             Feature::Inheritance => "inheritance.rs",
             Feature::Scripting => "scripting.rs",
+            Feature::Diplomacy => "diplomacy.rs",
+            Feature::Forces => "forces.rs",
+            Feature::Intelligence => "intelligence.rs",
+            Feature::FogOfWar => "fog.rs",
         }
     }
 }
@@ -41,6 +53,10 @@ pub struct FeatureSet {
     titles: bool,
     inheritance: bool,
     scripting: bool,
+    diplomacy: bool,
+    forces: bool,
+    intelligence: bool,
+    fog_of_war: bool,
 }
 
 impl FeatureSet {
@@ -58,8 +74,21 @@ impl FeatureSet {
                 self.titles = true;
             }
             Feature::Scripting => self.scripting = true,
+            Feature::Diplomacy => self.diplomacy = true,
+            Feature::Forces => self.forces = true,
+            Feature::Intelligence => self.intelligence = true,
+            Feature::FogOfWar => self.fog_of_war = true,
         }
         self
+    }
+
+    /// Shared grand-strategy layer: diplomacy, forces, intelligence, fog.
+    pub fn grand_strategy() -> Self {
+        Self::none()
+            .enable(Feature::Diplomacy)
+            .enable(Feature::Forces)
+            .enable(Feature::Intelligence)
+            .enable(Feature::FogOfWar)
     }
 
     pub fn contains(&self, feature: Feature) -> bool {
@@ -68,20 +97,24 @@ impl FeatureSet {
             Feature::Titles => self.titles,
             Feature::Inheritance => self.inheritance,
             Feature::Scripting => self.scripting,
+            Feature::Diplomacy => self.diplomacy,
+            Feature::Forces => self.forces,
+            Feature::Intelligence => self.intelligence,
+            Feature::FogOfWar => self.fog_of_war,
         }
     }
 
     /// Dynastic game: marriage, titles, inheritance, and a script seam.
     pub fn crusader_kings_like() -> Self {
-        Self::none()
+        Self::grand_strategy()
             .enable(Feature::Marriage)
             .enable(Feature::Inheritance)
             .enable(Feature::Scripting)
     }
 
-    /// State-and-war game: script seam only. No marriage, titles, or inheritance.
+    /// State-and-war game: grand-strategy layer and scripts. No marriage, titles, or inheritance.
     pub fn hearts_of_iron_like() -> Self {
-        Self::none().enable(Feature::Scripting)
+        Self::grand_strategy().enable(Feature::Scripting)
     }
 }
 

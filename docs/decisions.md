@@ -245,3 +245,20 @@ decision is reversed, add a new entry that names the one it replaces.
 - **Source of the idea:** James; Clausewitz (scripted effects call engine
   commands)
 - **Decided by:** James (continue); Grok from iPhone (the ask list and two effects)
+
+### 2026-10-03 — General grand-strategy layer before more dynastic rules
+
+- **Decided:** Offices are core: a polity seats a living member in a named office.
+  Diplomacy (shared stance plus directed opinion), forces (owner, game-defined
+  kind, location, strength), intelligence (hidden operations), and fog of war
+  are features. Both Crusader Kings-like and Hearts of Iron-like profiles enable
+  those four. Fog off sees every location. Fog on sees owned and revealed land.
+  Force kinds are strings, not a closed list.
+- **Alternatives:** Hard-code army and fleet; make a ruler a dynastic title;
+  leave fog always on.
+- **Why:** James (2026-10-03, iPhone) asked for the general grand-strategy
+  layer first: political entities, leaders, diplomacy, forces, spies, fog.
+  Polities already existed. The rest did not.
+- **Source of the idea:** James; Clausewitz (countries, diplomacy, units,
+  intelligence, fog)
+- **Decided by:** James

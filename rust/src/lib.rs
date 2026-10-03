@@ -27,4 +27,4 @@ pub use features::{
 };
 pub use load::{world_from_records, CharacterRecord, LoadedWorld, TitleRecord};
 pub use person::Person;
-pub use world::World;
+pub use world::{Stance, World};

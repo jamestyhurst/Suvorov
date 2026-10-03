@@ -17,6 +17,34 @@ struct ScheduledEvent {
     effects: Vec<Effect>,
 }
 
+struct Office {
+    polity_id: u32,
+    name: String,
+    person_id: u32,
+}
+
+struct Force {
+    owner: u32,
+    kind: String,
+    location_id: u32,
+    strength: u32,
+}
+
+struct Operation {
+    actor: u32,
+    target: u32,
+    kind: String,
+    revealed: bool,
+}
+
+/// Shared stance between two polities. Opinion is separate and directed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Stance {
+    Peace,
+    War,
+    Truce,
+}
+
 /// Deterministic world: date, named polities, named locations, persons.
 pub struct World {
     current_date: Date,
@@ -31,6 +59,12 @@ pub struct World {
     scripts: Vec<(String, CompiledScript)>,
     fired_scripts: Vec<String>,
     features: FeatureSet,
+    offices: Vec<Office>,
+    stances: Vec<(u32, u32, Stance)>,
+    opinions: Vec<(u32, u32, i32)>,
+    forces: Vec<Force>,
+    operations: Vec<Operation>,
+    revealed: Vec<(u32, u32)>,
     scheduled: Vec<ScheduledEvent>,
     fired: Vec<String>,
 }
@@ -54,6 +88,12 @@ impl World {
             scripts: Vec::new(),
             fired_scripts: Vec::new(),
             features: FeatureSet::none(),
+            offices: Vec::new(),
+            stances: Vec::new(),
+            opinions: Vec::new(),
+            forces: Vec::new(),
+            operations: Vec::new(),
+            revealed: Vec::new(),
             scheduled: Vec::new(),
             fired: Vec::new(),
         })
@@ -89,6 +129,10 @@ impl World {
             Feature::Titles => "Titles are not enabled for this game",
             Feature::Inheritance => "Inheritance is not enabled for this game",
             Feature::Scripting => "Scripting is not enabled for this game",
+            Feature::Diplomacy => "Diplomacy is not enabled for this game",
+            Feature::Forces => "Forces are not enabled for this game",
+            Feature::Intelligence => "Intelligence is not enabled for this game",
+            Feature::FogOfWar => "Fog of war is not enabled for this game",
         };
         Err(Error::FeatureDisabled(name))
     }
@@ -585,6 +629,146 @@ impl World {
             }
         }
         Ok(())
+    }
+
+    /// Seat a living member of this polity in a named office. Core: every entity can have a ruler.
+    pub fn appoint(&mut self, polity_id: u32, office: impl Into<String>, person_id: u32) -> Result<()> {
+        self.polity_name(polity_id)?;
+        let office = office.into();
+        if office.is_empty() {
+            return Err(Error::InvalidArgument("Office name cannot be empty"));
+        }
+        self.require_living(person_id)?;
+        if !self.person(person_id)?.allegiances.contains(&polity_id) {
+            return Err(Error::InvalidArgument("Person is not a member of that polity"));
+        }
+        if let Some(slot) = self.offices.iter_mut().find(|seat| seat.polity_id == polity_id && seat.name == office) {
+            slot.person_id = person_id;
+        } else {
+            self.offices.push(Office { polity_id, name: office, person_id });
+        }
+        Ok(())
+    }
+
+    pub fn office_holder(&self, polity_id: u32, office: &str) -> Result<Option<u32>> {
+        self.polity_name(polity_id)?;
+        Ok(self.offices.iter().find(|seat| seat.polity_id == polity_id && seat.name == office).map(|seat| seat.person_id))
+    }
+
+    pub fn set_stance(&mut self, a: u32, b: u32, stance: Stance) -> Result<()> {
+        self.require(Feature::Diplomacy)?;
+        self.polity_name(a)?;
+        self.polity_name(b)?;
+        if a == b {
+            return Err(Error::InvalidArgument("A polity has no stance toward itself"));
+        }
+        let (lo, hi) = if a < b { (a, b) } else { (b, a) };
+        if let Some(slot) = self.stances.iter_mut().find(|(x, y, _)| *x == lo && *y == hi) {
+            slot.2 = stance;
+        } else {
+            self.stances.push((lo, hi, stance));
+        }
+        Ok(())
+    }
+
+    pub fn stance(&self, a: u32, b: u32) -> Result<Stance> {
+        self.require(Feature::Diplomacy)?;
+        self.polity_name(a)?;
+        self.polity_name(b)?;
+        let (lo, hi) = if a < b { (a, b) } else { (b, a) };
+        Ok(self.stances.iter().find(|(x, y, _)| *x == lo && *y == hi).map(|(_, _, stance)| *stance).unwrap_or(Stance::Peace))
+    }
+
+    pub fn set_opinion(&mut self, from: u32, toward: u32, value: i32) -> Result<()> {
+        self.require(Feature::Diplomacy)?;
+        self.polity_name(from)?;
+        self.polity_name(toward)?;
+        if from == toward {
+            return Err(Error::InvalidArgument("A polity has no opinion of itself"));
+        }
+        if let Some(slot) = self.opinions.iter_mut().find(|(a, b, _)| *a == from && *b == toward) {
+            slot.2 = value;
+        } else {
+            self.opinions.push((from, toward, value));
+        }
+        Ok(())
+    }
+
+    pub fn opinion(&self, from: u32, toward: u32) -> Result<i32> {
+        self.require(Feature::Diplomacy)?;
+        self.polity_name(from)?;
+        self.polity_name(toward)?;
+        Ok(self.opinions.iter().find(|(a, b, _)| *a == from && *b == toward).map(|(_, _, value)| *value).unwrap_or(0))
+    }
+
+    /// A military force. `kind` is the game's word (army, fleet, levy); the engine does not close the list.
+    pub fn raise_force(&mut self, owner: u32, kind: impl Into<String>, location_id: u32, strength: u32) -> Result<u32> {
+        self.require(Feature::Forces)?;
+        self.polity_name(owner)?;
+        self.check_location(location_id)?;
+        let kind = kind.into();
+        if kind.is_empty() {
+            return Err(Error::InvalidArgument("Force kind cannot be empty"));
+        }
+        self.forces.push(Force { owner, kind, location_id, strength });
+        Ok((self.forces.len() - 1) as u32)
+    }
+
+    pub fn force_kind(&self, force_id: u32) -> Result<&str> {
+        self.require(Feature::Forces)?;
+        self.forces.get(force_id as usize).map(|force| force.kind.as_str()).ok_or(Error::OutOfRange("Force id does not exist"))
+    }
+
+    pub fn force_strength(&self, force_id: u32) -> Result<u32> {
+        self.require(Feature::Forces)?;
+        self.forces.get(force_id as usize).map(|force| force.strength).ok_or(Error::OutOfRange("Force id does not exist"))
+    }
+
+    pub fn post_operation(&mut self, actor: u32, target: u32, kind: impl Into<String>) -> Result<u32> {
+        self.require(Feature::Intelligence)?;
+        self.polity_name(actor)?;
+        self.polity_name(target)?;
+        let kind = kind.into();
+        if kind.is_empty() {
+            return Err(Error::InvalidArgument("Operation kind cannot be empty"));
+        }
+        self.operations.push(Operation { actor, target, kind, revealed: false });
+        Ok((self.operations.len() - 1) as u32)
+    }
+
+    pub fn reveal_operation(&mut self, operation_id: u32) -> Result<()> {
+        self.require(Feature::Intelligence)?;
+        let op = self.operations.get_mut(operation_id as usize).ok_or(Error::OutOfRange("Operation id does not exist"))?;
+        op.revealed = true;
+        Ok(())
+    }
+
+    pub fn operation_revealed(&self, operation_id: u32) -> Result<bool> {
+        self.require(Feature::Intelligence)?;
+        self.operations.get(operation_id as usize).map(|op| op.revealed).ok_or(Error::OutOfRange("Operation id does not exist"))
+    }
+
+    pub fn reveal_location(&mut self, polity_id: u32, location_id: u32) -> Result<()> {
+        self.require(Feature::FogOfWar)?;
+        self.polity_name(polity_id)?;
+        self.check_location(location_id)?;
+        if !self.revealed.contains(&(polity_id, location_id)) {
+            self.revealed.push((polity_id, location_id));
+        }
+        Ok(())
+    }
+
+    /// Fog off: everything is visible. Fog on: owned land and revealed land only.
+    pub fn can_see(&self, polity_id: u32, location_id: u32) -> Result<bool> {
+        self.polity_name(polity_id)?;
+        self.check_location(location_id)?;
+        if !self.features.contains(Feature::FogOfWar) {
+            return Ok(true);
+        }
+        if self.owners[location_id as usize] == Some(polity_id) {
+            return Ok(true);
+        }
+        Ok(self.revealed.contains(&(polity_id, location_id)))
     }
 
     pub fn person_death_date(&self, person_id: u32) -> Result<Option<Date>> {
