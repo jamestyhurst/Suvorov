@@ -10,4 +10,8 @@ pub enum Effect {
         location_id: u32,
         owner: Option<u32>,
     },
+    /// Name of a bound Rune script. The tick calls `on_fire` and records `name=return`.
+    RunScript(String),
+    MovePerson { person_id: u32, location_id: u32 },
+    SetAllegiance { person_id: u32, polity_id: u32 },
 }

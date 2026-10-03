@@ -1,8 +1,9 @@
 # suvorov-core (Rust)
 
-Rust simulation core: world date, named polities and locations, persons, derived
-borders, scheduled events with a frozen `Effect` list, and `world_from_records`
-(schema-shaped title/character structs, fictional fixtures only).
+Rust simulation core (canonical engine, James 2026-10-03): world date, named
+polities and locations, persons, derived borders, scheduled events with a frozen
+`Effect` list, `world_from_records`, and an opt-in `FeatureSet` (marriage, titles,
+inheritance, script seam). A bare world enables none of those.
 
 ```bash
 cargo test
