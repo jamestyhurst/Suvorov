@@ -102,3 +102,47 @@ fn a_script_cannot_marry_when_marriage_is_off() {
     );
     assert!(matches!(world.spouse(0), Err(Error::FeatureDisabled(_))));
 }
+
+#[test]
+fn a_script_reads_a_name_and_cannot_grant_a_title() {
+    let mut world = world();
+    world
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { if world::grant_title(0, \"Northfold\") < 0 { \"refused\" } else { \"ok\" } }",
+        )
+        .unwrap();
+    world
+        .schedule_event_with_effects(
+            Date::new(1001, 1, 2),
+            "pulse",
+            vec![Effect::RunScript("on_pulse".into())],
+        )
+        .unwrap();
+    world.advance_one_day();
+    assert_eq!(world.drain_fired_scripts(), vec!["on_pulse=refused".to_string()]);
+}
+
+#[test]
+fn a_script_can_move_and_rename_allegiance_without_dynastic_features() {
+    let mut world = world();
+    world.add_polity("Southfold").unwrap();
+    world.add_location("Birchford").unwrap();
+    world
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { world::move_person(0, 1); world::set_allegiance(0, 1); world::person_name(0) }",
+        )
+        .unwrap();
+    world
+        .schedule_event_with_effects(
+            Date::new(1001, 1, 2),
+            "pulse",
+            vec![Effect::RunScript("on_pulse".into())],
+        )
+        .unwrap();
+    world.advance_one_day();
+    assert_eq!(world.drain_fired_scripts(), vec!["on_pulse=Alder".to_string()]);
+    assert_eq!(world.person(0).unwrap().current_location_id, 1);
+    assert_eq!(world.person(0).unwrap().allegiances, vec![1]);
+}

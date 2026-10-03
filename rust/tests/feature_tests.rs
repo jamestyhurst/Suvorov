@@ -129,3 +129,51 @@ fn a_script_can_marry_only_when_that_feature_is_on() {
     assert_eq!(world.drain_fired_scripts(), vec!["on_pulse=ok".to_string()]);
     assert_eq!(world.spouse(0).unwrap(), Some(1));
 }
+
+#[test]
+fn a_script_grants_and_names_an_heir_only_when_those_features_are_on() {
+    let mut world = world_with(
+        FeatureSet::none()
+            .enable(Feature::Scripting)
+            .enable(Feature::Inheritance),
+    );
+    world
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { let id = world::grant_title(0, \"Northfold\"); world::designate_heir(id, 1); \"done\" }",
+        )
+        .unwrap();
+    world
+        .schedule_event_with_effects(
+            Date::new(1001, 1, 2),
+            "pulse",
+            vec![Effect::RunScript("on_pulse".into())],
+        )
+        .unwrap();
+    world.advance_one_day();
+    assert_eq!(world.drain_fired_scripts(), vec!["on_pulse=done".to_string()]);
+    assert_eq!(world.title_holder(0).unwrap(), Some(0));
+    world.kill_person(0).unwrap();
+    assert_eq!(world.title_holder(0).unwrap(), Some(1));
+}
+
+#[test]
+fn inheritance_off_refuses_an_heir_from_a_script() {
+    let mut world = world_with(FeatureSet::none().enable(Feature::Scripting).enable(Feature::Titles));
+    world
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { let id = world::grant_title(0, \"Northfold\"); world::designate_heir(id, 1) }",
+        )
+        .unwrap();
+    world
+        .schedule_event_with_effects(
+            Date::new(1001, 1, 2),
+            "pulse",
+            vec![Effect::RunScript("on_pulse".into())],
+        )
+        .unwrap();
+    world.advance_one_day();
+    assert_eq!(world.drain_fired_scripts(), vec!["on_pulse=refused".to_string()]);
+    assert_eq!(world.title_holder(0).unwrap(), Some(0));
+}

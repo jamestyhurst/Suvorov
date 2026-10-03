@@ -448,7 +448,32 @@ impl World {
                 }
                 Ok(())
             }
+            Effect::MovePerson { person_id, location_id } => {
+                if *person_id as usize >= self.persons.len() {
+                    return Err(Error::OutOfRange("Person id does not exist"));
+                }
+                self.check_location(*location_id)
+            }
+            Effect::SetAllegiance { person_id, polity_id } => {
+                if *person_id as usize >= self.persons.len() {
+                    return Err(Error::OutOfRange("Person id does not exist"));
+                }
+                if *polity_id as usize >= self.polities.len() {
+                    return Err(Error::OutOfRange("Polity id does not exist"));
+                }
+                Ok(())
+            }
         }
+    }
+
+    /// Replace a living person's allegiances with one polity.
+    pub fn set_person_allegiance(&mut self, person_id: u32, polity_id: u32) -> Result<()> {
+        self.require_living(person_id)?;
+        if polity_id as usize >= self.polities.len() {
+            return Err(Error::OutOfRange("Polity id does not exist"));
+        }
+        self.persons[person_id as usize].allegiances = vec![polity_id];
+        Ok(())
     }
 
     fn apply_effect(&mut self, effect: Effect) {
@@ -459,25 +484,64 @@ impl World {
             Effect::SetLocationOwner { location_id, owner } => {
                 let _ = self.set_location_owner(location_id, owner);
             }
-            Effect::RunScript(name) => {
-                if let Some((_, script)) = self.scripts.iter().find(|(existing, _)| existing == &name) {
-                    let today = self.current_date;
-                    let view = crate::script::ScriptView {
-                        year: today.year,
-                        month: today.month,
-                        day: today.day,
-                        marriage_enabled: self.features.contains(Feature::Marriage),
-                        person_count: self.persons.len() as u32,
-                    };
-                    match script.call_on_fire(view) {
-                        Ok((value, command)) => {
-                            self.fired_scripts.push(format!("{name}={value}"));
-                            if let Some((a, b)) = command.marry {
-                                let _ = self.contract_marriage(a, b);
-                            }
-                        }
-                        Err(err) => self.fired_scripts.push(format!("{name}!{err}")),
-                    }
+            Effect::RunScript(name) => self.apply_script(&name),
+            Effect::MovePerson { person_id, location_id } => {
+                let _ = self.set_person_location(person_id, location_id);
+            }
+            Effect::SetAllegiance { person_id, polity_id } => {
+                let _ = self.set_person_allegiance(person_id, polity_id);
+            }
+        }
+    }
+
+    fn apply_script(&mut self, name: &str) {
+        let Some((_, script)) = self.scripts.iter().find(|(existing, _)| existing == name) else {
+            return;
+        };
+        let today = self.current_date;
+        let view = crate::script::ScriptView {
+            year: today.year,
+            month: today.month,
+            day: today.day,
+            marriage_enabled: self.features.contains(Feature::Marriage),
+            titles_enabled: self.features.contains(Feature::Titles),
+            inheritance_enabled: self.features.contains(Feature::Inheritance),
+            person_count: self.persons.len() as u32,
+            location_count: self.locations.len() as u32,
+            polity_count: self.polities.len() as u32,
+            title_count: self.titles.len() as u32,
+            names: self.persons.iter().map(|person| person.names[0].clone()).collect(),
+            alive: self.death_dates.iter().map(|date| date.is_none()).collect(),
+        };
+        match script.call_on_fire(view) {
+            Ok((value, asks)) => {
+                self.fired_scripts.push(format!("{name}={value}"));
+                self.apply_asks(asks);
+            }
+            Err(err) => self.fired_scripts.push(format!("{name}!{err}")),
+        }
+    }
+
+    fn apply_asks(&mut self, asks: Vec<crate::script::ScriptAsk>) {
+        for ask in asks {
+            match ask {
+                crate::script::ScriptAsk::Marry(a, b) => {
+                    let _ = self.contract_marriage(a, b);
+                }
+                crate::script::ScriptAsk::GrantTitle { name, holder } => {
+                    let _ = self.create_title(name, Some(holder));
+                }
+                crate::script::ScriptAsk::DesignateHeir { title_id, heir } => {
+                    let _ = self.designate_heir(title_id, heir);
+                }
+                crate::script::ScriptAsk::MovePerson { person_id, location_id } => {
+                    let _ = self.set_person_location(person_id, location_id);
+                }
+                crate::script::ScriptAsk::Kill(person_id) => {
+                    let _ = self.kill_person(person_id);
+                }
+                crate::script::ScriptAsk::SetAllegiance { person_id, polity_id } => {
+                    let _ = self.set_person_allegiance(person_id, polity_id);
                 }
             }
         }

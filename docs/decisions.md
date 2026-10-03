@@ -228,3 +228,20 @@ decision is reversed, add a new entry that names the one it replaces.
   effects call engine commands, they do not own the gamestate)
 - **Decided by:** James (do the slice); Grok from iPhone (two functions, command
   applied after the call)
+
+### 2026-10-03 — World API asks, plus move and allegiance effects
+
+- **Decided:** A Rune script may ask for marriage, a title grant, an heir, a move,
+  a death, or an allegiance change. The world applies the asks in order after
+  `on_fire` returns. Marriage, titles, and inheritance still refuse when disabled.
+  Move, kill, and allegiance are core. `Effect::MovePerson` and
+  `Effect::SetAllegiance` schedule the same two core changes without a script.
+  `grant_title` returns the title id so the same script can name an heir.
+- **Alternatives:** One ask per script; let the script hold `World`; make movement
+  a feature.
+- **Why:** James (2026-10-03, iPhone) asked for more work per prompt and had
+  already accepted a title binding. Persons already have a location and an
+  allegiance, so those changes are not a new game.
+- **Source of the idea:** James; Clausewitz (scripted effects call engine
+  commands)
+- **Decided by:** James (continue); Grok from iPhone (the ask list and two effects)
