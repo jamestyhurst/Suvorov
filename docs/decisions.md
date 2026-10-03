@@ -133,3 +133,25 @@ decision is reversed, add a new entry that names the one it replaces.
 - **Source of the idea:** Clausewitz (date-scheduled events, pulses); general practice
   (event queue)
 - **Decided by:** Claude (agent), on James's instruction (2026-10-01) to continue
+
+### 2026-10-03 — Scheduled events apply a frozen effect vocabulary
+
+- **Decided:** `World::schedule_event_with_effects` attaches a list of `Effect` values to a
+  named future event. The first two effects are `KillPerson` and `SetLocationOwner`.
+  `advance_one_day` applies due effects, then queues the event name for
+  `drain_fired_events`. Unknown ids are rejected when the event is scheduled. A scheduled
+  kill of someone already dead is a no-op so the tick never fails. Name-only
+  `schedule_event` remains (empty effect list).
+- **Replaces:** the clause in "Death is a world-side record; scheduled events fire into a
+  queue" that said events carry only a name and have no effects yet.
+- **Alternatives:** callbacks inside the tick; an embedded script VM (Rhai/mlua); a
+  separate command stream not tied to dates.
+- **Why:** Simplest first. PR #6 left events as names. Clausewitz fires dated events into
+  world changes. A frozen enum keeps the tick free of game scripts; the rewrite plan said
+  not to add a VM until that vocabulary is too small. `SetLocationOwner` is how a peace
+  or cession moves derived borders without storing border data.
+- **Source of the idea:** Clausewitz (date-scheduled events with immediate effects);
+  `docs/2026-09-30-rust-rewrite-plan.md` on PR #5 (frozen effect vocabulary); PR #6
+  suggested next step (event/trigger system)
+- **Decided by:** Grok (Zhantianzhe), on James's instruction (2026-10-03) to continue the
+  Rust rewrite
