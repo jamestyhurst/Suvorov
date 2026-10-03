@@ -1,7 +1,8 @@
 # suvorov-core (Rust)
 
 Rust simulation core: world date, named polities and locations, persons, derived
-borders, and scheduled events with a frozen `Effect` list.
+borders, scheduled events with a frozen `Effect` list, and `world_from_records`
+(schema-shaped title/character structs, fictional fixtures only).
 
 ```bash
 cargo test

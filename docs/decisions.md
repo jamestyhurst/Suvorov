@@ -155,3 +155,23 @@ decision is reversed, add a new entry that names the one it replaces.
   suggested next step (event/trigger system)
 - **Decided by:** Grok (Zhantianzhe), on James's instruction (2026-10-03) to continue the
   Rust rewrite
+
+### 2026-10-03 — Compiled loader; historical deaths stay in World
+
+- **Decided:** `world_from_records` lives in the Rust crate (`rust/src/load.rs`). Title and
+  character records are typed structs (`TitleRecord`, `CharacterRecord`), not serde JSON.
+  Characters whose death date is on or before start are loaded and marked dead with
+  `World::record_death` using that historical date. `kill_person` stays "die today" and
+  delegates to `record_death` with the current world date. Python `load.py` still skips the
+  dead; PyO3 does not yet expose the compiled loader.
+- **Replaces:** the skip-at-load mapping in `docs/2026-09-29-premyslid-bridge.md` (dead
+  characters omitted because Person had no death field).
+- **Alternatives:** serde_json dicts in this slice; keep skipping the dead; stamp death as
+  the world start date via `kill_person`.
+- **Why:** Rewrite plan Phase 3 asked for a compiled equivalent of `world_from_records`
+  with fictional fixtures. `kill_person` would record the start date, which is the wrong
+  death. serde waits until a JSON-on-disk loader needs it. Simplest first.
+- **Source of the idea:** `docs/2026-09-30-rust-rewrite-plan.md` Phase 3 (compiled loader);
+  Clausewitz history files keep the dead; PR #7 suggested next step
+- **Decided by:** Grok (Zhantianzhe), on James's instruction (2026-10-03, session 2) to
+  continue the Rust rewrite

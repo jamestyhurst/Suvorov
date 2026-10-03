@@ -13,6 +13,28 @@ impl Date {
         Self { year, month, day }
     }
 
+    /// Parse `YYYY-MM-DD`. Leading zeros on the year are allowed (`0980-03-01`).
+    pub fn from_iso(text: &str) -> Result<Self> {
+        let mut parts = text.split('-');
+        let year = parts.next().and_then(|s| s.parse().ok());
+        let month = parts.next().and_then(|s| s.parse().ok());
+        let day = parts.next().and_then(|s| s.parse().ok());
+        if parts.next().is_some() {
+            return Err(Error::InvalidArgument("ISO date is invalid"));
+        }
+        match (year, month, day) {
+            (Some(year), Some(month), Some(day)) => {
+                let date = Self::new(year, month, day);
+                if date.valid() {
+                    Ok(date)
+                } else {
+                    Err(Error::InvalidArgument("ISO date is invalid"))
+                }
+            }
+            _ => Err(Error::InvalidArgument("ISO date is invalid")),
+        }
+    }
+
     pub fn valid(self) -> bool {
         if self.month < 1 || self.month > 12 || self.day < 1 {
             return false;
@@ -70,6 +92,14 @@ fn days_in_month(year: i32, month: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn from_iso_accepts_leading_zeros_and_rejects_junk() {
+        assert_eq!(Date::from_iso("0980-03-01").unwrap(), Date::new(980, 3, 1));
+        assert!(Date::from_iso("1000-02-30").is_err());
+        assert!(Date::from_iso("not-a-date").is_err());
+        assert!(Date::from_iso("1000-01").is_err());
+    }
 
     #[test]
     fn leap_day_age_boundary() {
