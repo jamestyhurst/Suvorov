@@ -1,7 +1,7 @@
 # suvorov-core (Rust)
 
-First-class Rust port of the Suvorov World API from draft PR #2. Candidate
-engine core, not yet the recorded engine language.
+Rust simulation core: world date, named polities and locations, persons, derived
+borders, and scheduled events with a frozen `Effect` list.
 
 ```bash
 cargo test

@@ -1,6 +1,13 @@
 use crate::date::{biological_age, Date};
+use crate::effect::Effect;
 use crate::error::{Error, Result};
 use crate::person::Person;
+
+struct ScheduledEvent {
+    date: Date,
+    name: String,
+    effects: Vec<Effect>,
+}
 
 /// Deterministic world: date, named polities, named locations, persons.
 pub struct World {
@@ -11,7 +18,7 @@ pub struct World {
     owners: Vec<Option<u32>>,
     persons: Vec<Person>,
     death_dates: Vec<Option<Date>>,
-    scheduled: Vec<(Date, String)>,
+    scheduled: Vec<ScheduledEvent>,
     fired: Vec<String>,
 }
 
@@ -186,20 +193,35 @@ impl World {
         Ok(())
     }
 
-    /// Advance one day, then move events scheduled for the new date into the fired queue.
+    /// Advance one day, apply due event effects, then queue those event names.
     pub fn advance_one_day(&mut self) {
         self.current_date.advance_one_day();
         let today = self.current_date;
         let (due, later): (Vec<_>, Vec<_>) = self
             .scheduled
             .drain(..)
-            .partition(|(date, _)| *date == today);
+            .partition(|event| event.date == today);
         self.scheduled = later;
-        self.fired.extend(due.into_iter().map(|(_, name)| name));
+        for event in due {
+            for effect in event.effects {
+                self.apply_effect(effect);
+            }
+            self.fired.push(event.name);
+        }
     }
 
     /// Queue a named event to fire when the world reaches `date` (strictly in the future).
     pub fn schedule_event(&mut self, date: Date, name: impl Into<String>) -> Result<()> {
+        self.schedule_event_with_effects(date, name, Vec::new())
+    }
+
+    /// Queue a named event that applies `effects` when it fires.
+    pub fn schedule_event_with_effects(
+        &mut self,
+        date: Date,
+        name: impl Into<String>,
+        effects: Vec<Effect>,
+    ) -> Result<()> {
         let name = name.into();
         if name.is_empty() {
             return Err(Error::InvalidArgument("Event name cannot be empty"));
@@ -212,8 +234,46 @@ impl World {
                 "Event date must be after the world date",
             ));
         }
-        self.scheduled.push((date, name));
+        for effect in &effects {
+            self.check_effect(effect)?;
+        }
+        self.scheduled.push(ScheduledEvent {
+            date,
+            name,
+            effects,
+        });
         Ok(())
+    }
+
+    fn check_effect(&self, effect: &Effect) -> Result<()> {
+        match effect {
+            Effect::KillPerson(person_id) => {
+                if *person_id as usize >= self.persons.len() {
+                    return Err(Error::OutOfRange("Person id does not exist"));
+                }
+                Ok(())
+            }
+            Effect::SetLocationOwner { location_id, owner } => {
+                self.check_location(*location_id)?;
+                if let Some(polity_id) = owner {
+                    if *polity_id as usize >= self.polities.len() {
+                        return Err(Error::OutOfRange("Polity id does not exist"));
+                    }
+                }
+                Ok(())
+            }
+        }
+    }
+
+    fn apply_effect(&mut self, effect: Effect) {
+        match effect {
+            Effect::KillPerson(person_id) => {
+                let _ = self.kill_person(person_id);
+            }
+            Effect::SetLocationOwner { location_id, owner } => {
+                let _ = self.set_location_owner(location_id, owner);
+            }
+        }
     }
 
     /// Take the events that fired since the last drain, in the order they were scheduled.

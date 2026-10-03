@@ -1,4 +1,4 @@
-use suvorov_core::{Date, Error, Person, World};
+use suvorov_core::{Date, Effect, Error, Person, World};
 
 fn world_with_person() -> (World, u32) {
     let mut world = World::new(2024, 1, 1).unwrap();
@@ -84,4 +84,85 @@ fn scheduling_rejects_past_today_invalid_dates_and_empty_names() {
         world.schedule_event(Date::new(2024, 1, 1), "today"),
         Err(Error::InvalidArgument(_))
     ));
+}
+
+#[test]
+fn scheduled_kill_applies_when_the_event_fires() {
+    let (mut world, id) = world_with_person();
+    world
+        .schedule_event_with_effects(
+            Date::new(2024, 1, 2),
+            "calen dies",
+            vec![Effect::KillPerson(id)],
+        )
+        .unwrap();
+
+    assert!(world.is_alive(id).unwrap());
+    world.advance_one_day();
+    assert!(!world.is_alive(id).unwrap());
+    assert_eq!(
+        world.person_death_date(id).unwrap(),
+        Some(Date::new(2024, 1, 2))
+    );
+    assert_eq!(world.drain_fired_events(), vec!["calen dies"]);
+}
+
+#[test]
+fn scheduling_a_kill_rejects_an_unknown_person() {
+    let (mut world, _id) = world_with_person();
+    assert!(matches!(
+        world.schedule_event_with_effects(
+            Date::new(2024, 1, 2),
+            "ghost",
+            vec![Effect::KillPerson(99)],
+        ),
+        Err(Error::OutOfRange(_))
+    ));
+}
+
+#[test]
+fn scheduled_owner_change_moves_the_derived_border() {
+    let mut world = World::new(2024, 1, 1).unwrap();
+    let aurora = world.add_polity("Aurora").unwrap();
+    let helia = world.add_polity("Helia").unwrap();
+    let vale = world.add_location("Amber Vale").unwrap();
+    let ridge = world.add_location("Glass Ridge").unwrap();
+    world.connect_locations(vale, ridge).unwrap();
+    world.set_location_owner(vale, Some(aurora)).unwrap();
+    world.set_location_owner(ridge, Some(aurora)).unwrap();
+    assert!(world.borders().is_empty());
+
+    world
+        .schedule_event_with_effects(
+            Date::new(2024, 1, 2),
+            "ridge ceded",
+            vec![Effect::SetLocationOwner {
+                location_id: ridge,
+                owner: Some(helia),
+            }],
+        )
+        .unwrap();
+
+    world.advance_one_day();
+    assert_eq!(world.location_owner(ridge).unwrap(), Some(helia));
+    assert_eq!(world.borders(), vec![(vale, ridge)]);
+    assert_eq!(world.drain_fired_events(), vec!["ridge ceded"]);
+}
+
+#[test]
+fn scheduled_kill_of_an_already_dead_person_still_fires() {
+    let (mut world, id) = world_with_person();
+    world
+        .schedule_event_with_effects(
+            Date::new(2024, 1, 2),
+            "calen dies",
+            vec![Effect::KillPerson(id)],
+        )
+        .unwrap();
+    world.kill_person(id).unwrap();
+    let death = world.person_death_date(id).unwrap();
+
+    world.advance_one_day();
+    assert_eq!(world.person_death_date(id).unwrap(), death);
+    assert_eq!(world.drain_fired_events(), vec!["calen dies"]);
 }
