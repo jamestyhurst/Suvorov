@@ -4,11 +4,13 @@
 //! a `World` owns a calendar date, named polities, named locations, and persons.
 //! `advance_one_day` is the only tick. Locations form an adjacency graph; ownership
 //! and borders are derived (see `World::borders`). Scheduled events may carry a
-//! frozen [`Effect`] list applied on the fire date.
+//! frozen [`Effect`] list applied on the fire date. Schema-shaped records load
+//! through [`world_from_records`].
 
 pub mod date;
 pub mod effect;
 pub mod error;
+pub mod load;
 pub mod person;
 pub mod world;
 
@@ -18,5 +20,6 @@ mod python;
 pub use date::{biological_age, Date};
 pub use effect::Effect;
 pub use error::{Error, Result};
+pub use load::{world_from_records, CharacterRecord, LoadedWorld, TitleRecord};
 pub use person::Person;
 pub use world::World;

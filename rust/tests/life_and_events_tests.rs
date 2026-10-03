@@ -41,6 +41,37 @@ fn people_start_alive_and_death_is_recorded_once() {
 }
 
 #[test]
+fn record_death_rejects_future_before_birth_and_invalid_dates() {
+    let (mut world, id) = world_with_person();
+    assert!(matches!(
+        world.record_death(id, Date::new(2024, 1, 2)),
+        Err(Error::InvalidArgument(_))
+    ));
+    assert!(matches!(
+        world.record_death(id, Date::new(1989, 1, 1)),
+        Err(Error::InvalidArgument(_))
+    ));
+    assert!(matches!(
+        world.record_death(id, Date::new(2024, 2, 30)),
+        Err(Error::InvalidArgument(_))
+    ));
+    assert!(matches!(
+        world.record_death(99, Date::new(2024, 1, 1)),
+        Err(Error::OutOfRange(_))
+    ));
+
+    world.record_death(id, Date::new(2023, 6, 1)).unwrap();
+    assert_eq!(
+        world.person_death_date(id).unwrap(),
+        Some(Date::new(2023, 6, 1))
+    );
+    assert!(matches!(
+        world.record_death(id, Date::new(2023, 7, 1)),
+        Err(Error::InvalidArgument(_))
+    ));
+}
+
+#[test]
 fn scheduled_events_fire_on_their_date_in_schedule_order() {
     let mut world = World::new(2024, 12, 30).unwrap();
     world

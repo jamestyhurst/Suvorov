@@ -11,8 +11,9 @@ Mapping
 - Each title also becomes a polity (the title id). A holder's allegiance is
   every title they hold at start. Characters who hold nothing get a required
   allegiance to a polity named ``unlanded``.
-- Dead characters (death date on or before start) are omitted. The Person
-  record has no death field yet.
+- Dead characters (death date on or before start) are omitted here. The
+  compiled Rust loader (`suvorov_core.world_from_records`) keeps them and
+  records the historical death date. PyO3 does not export that path yet.
 - Birth and current location: the holder's first title, else ``unlocated``.
 """
 

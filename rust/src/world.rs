@@ -281,15 +281,28 @@ impl World {
         std::mem::take(&mut self.fired)
     }
 
+    /// Record that `person_id` died on the current world date.
     pub fn kill_person(&mut self, person_id: u32) -> Result<()> {
-        let slot = self
-            .death_dates
-            .get_mut(person_id as usize)
-            .ok_or(Error::OutOfRange("Person id does not exist"))?;
+        self.record_death(person_id, self.current_date)
+    }
+
+    /// Record a death on `date` (at or before the world date, at or after birth).
+    pub fn record_death(&mut self, person_id: u32, date: Date) -> Result<()> {
+        let birth_date = self.person(person_id)?.birth_date;
+        if !date.valid() {
+            return Err(Error::InvalidArgument("Death date is invalid"));
+        }
+        if date < birth_date {
+            return Err(Error::InvalidArgument("Death date is before birth date"));
+        }
+        if date > self.current_date {
+            return Err(Error::InvalidArgument("Death date is after the world date"));
+        }
+        let slot = &mut self.death_dates[person_id as usize];
         if slot.is_some() {
             return Err(Error::InvalidArgument("Person is already dead"));
         }
-        *slot = Some(self.current_date);
+        *slot = Some(date);
         Ok(())
     }
 
