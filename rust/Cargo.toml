@@ -22,3 +22,4 @@ python = ["dep:pyo3"]
 
 [dependencies]
 pyo3 = { version = "0.21.2", features = ["extension-module"], optional = true }
+rune = "0.14.2"

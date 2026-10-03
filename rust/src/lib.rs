@@ -13,6 +13,7 @@ pub mod error;
 pub mod features;
 pub mod load;
 pub mod person;
+pub mod script;
 pub mod world;
 
 #[cfg(feature = "python")]

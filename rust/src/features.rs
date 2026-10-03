@@ -15,6 +15,25 @@ pub enum Feature {
     Scripting,
 }
 
+impl Feature {
+    pub const ALL: [Feature; 4] = [
+        Feature::Marriage,
+        Feature::Titles,
+        Feature::Inheritance,
+        Feature::Scripting,
+    ];
+
+    /// Isolated suite under `rust/tests/`. The regime test fails if this file is missing.
+    pub fn suite_file(self) -> &'static str {
+        match self {
+            Feature::Marriage => "marriage.rs",
+            Feature::Titles => "titles.rs",
+            Feature::Inheritance => "inheritance.rs",
+            Feature::Scripting => "scripting.rs",
+        }
+    }
+}
+
 /// Which optional capabilities a game has turned on.
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct FeatureSet {

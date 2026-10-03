@@ -71,10 +71,13 @@ fn titles_without_inheritance_stay_with_the_dead() {
 }
 
 #[test]
-fn script_body_is_stored_and_named_not_executed() {
+fn hearts_of_iron_profile_runs_a_bound_rune_script() {
     let mut world = world_with(FeatureSet::hearts_of_iron_like());
     world
-        .bind_script("on_pulse", "this body is not rust and must not run")
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { if year == 1001 { \"pulse\" } else { \"wrong\" } }",
+        )
         .unwrap();
     world
         .schedule_event_with_effects(
@@ -84,10 +87,9 @@ fn script_body_is_stored_and_named_not_executed() {
         )
         .unwrap();
     world.advance_one_day();
-    assert_eq!(world.drain_fired_scripts(), vec!["on_pulse".to_string()]);
     assert_eq!(
-        world.script_body("on_pulse").unwrap(),
-        Some("this body is not rust and must not run")
+        world.drain_fired_scripts(),
+        vec!["on_pulse=pulse".to_string()]
     );
 }
 

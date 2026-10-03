@@ -195,3 +195,20 @@ decision is reversed, add a new entry that names the one it replaces.
 - **Source of the idea:** James (language and opt-in); Clausewitz (one engine, many
   games, plaintext script beside the core)
 - **Decided by:** James
+
+### 2026-10-03 — Rune is the scripting language; opt-in modes have their own tests
+
+- **Decided:** Rune (`rune` 0.14, rune-rs) is the canonical scripting language. Not Lua,
+  not Python, not Rhai. A bound script must define `pub fn on_fire(year, month, day)`
+  and return a string. `bind_script` compiles it. `Effect::RunScript` calls it and
+  records `name=return`. Stdio is off. Every `Feature` has an isolated suite file under
+  `rust/tests/`; `regime.rs` fails if that file is missing. Inheritance's suite may also
+  enable Titles, because Inheritance implies Titles.
+- **Replaces:** the clause in "Rust is canonical; features are opt-in" that said the tick
+  does not interpret the script body.
+- **Alternatives:** Lua; Python; Rhai; leave scripts stored and unrun; test opt-in modes
+  only inside a full profile.
+- **Why:** James (2026-10-03, iPhone) asked for a testing regime for isolated modes, and
+  chose Rune over the other embeddable languages because he prefers the name.
+- **Source of the idea:** James
+- **Decided by:** James

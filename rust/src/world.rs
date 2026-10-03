@@ -3,6 +3,7 @@ use crate::effect::Effect;
 use crate::error::{Error, Result};
 use crate::features::{Feature, FeatureSet, GameProfile};
 use crate::person::Person;
+use crate::script::CompiledScript;
 
 struct Title {
     name: String,
@@ -27,7 +28,7 @@ pub struct World {
     death_dates: Vec<Option<Date>>,
     spouses: Vec<Option<u32>>,
     titles: Vec<Title>,
-    scripts: Vec<(String, String)>,
+    scripts: Vec<(String, CompiledScript)>,
     fired_scripts: Vec<String>,
     features: FeatureSet,
     scheduled: Vec<ScheduledEvent>,
@@ -292,18 +293,18 @@ impl World {
         Ok(())
     }
 
-    /// Store a script body under `name`. The core never evaluates `body`.
+    /// Compile a Rune body under `name`. It must define `on_fire(year, month, day)`.
     pub fn bind_script(&mut self, name: impl Into<String>, body: impl Into<String>) -> Result<()> {
         self.require(Feature::Scripting)?;
         let name = name.into();
         if name.is_empty() {
             return Err(Error::InvalidArgument("Script name cannot be empty"));
         }
-        let body = body.into();
+        let compiled = CompiledScript::compile(&name, &body.into())?;
         if let Some(slot) = self.scripts.iter_mut().find(|(existing, _)| existing == &name) {
-            slot.1 = body;
+            slot.1 = compiled;
         } else {
-            self.scripts.push((name, body));
+            self.scripts.push((name, compiled));
         }
         Ok(())
     }
@@ -314,10 +315,10 @@ impl World {
             .scripts
             .iter()
             .find(|(existing, _)| existing == name)
-            .map(|(_, body)| body.as_str()))
+            .map(|(_, script)| script.body()))
     }
 
-    /// Script names fired since the last drain, in schedule order. Bodies are not run.
+    /// `name=return` for each script that fired since the last drain, in schedule order.
     pub fn drain_fired_scripts(&mut self) -> Vec<String> {
         std::mem::take(&mut self.fired_scripts)
     }
@@ -459,8 +460,12 @@ impl World {
                 let _ = self.set_location_owner(location_id, owner);
             }
             Effect::RunScript(name) => {
-                if self.scripts.iter().any(|(existing, _)| existing == &name) {
-                    self.fired_scripts.push(name);
+                if let Some((_, script)) = self.scripts.iter().find(|(existing, _)| existing == &name) {
+                    let today = self.current_date;
+                    match script.call_on_fire(today.year, today.month, today.day) {
+                        Ok(value) => self.fired_scripts.push(format!("{name}={value}")),
+                        Err(err) => self.fired_scripts.push(format!("{name}!{err}")),
+                    }
                 }
             }
         }
