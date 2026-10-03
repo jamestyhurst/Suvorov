@@ -108,3 +108,24 @@ fn bare_world_starts_with_no_optional_features() {
     assert!(!world.features().contains(Feature::Marriage));
     assert!(!world.features().contains(Feature::Scripting));
 }
+
+#[test]
+fn a_script_can_marry_only_when_that_feature_is_on() {
+    let mut world = world_with(FeatureSet::none().enable(Feature::Scripting).enable(Feature::Marriage));
+    world
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { world::contract_marriage(0, 1) }",
+        )
+        .unwrap();
+    world
+        .schedule_event_with_effects(
+            Date::new(1001, 1, 2),
+            "pulse",
+            vec![Effect::RunScript("on_pulse".into())],
+        )
+        .unwrap();
+    world.advance_one_day();
+    assert_eq!(world.drain_fired_scripts(), vec!["on_pulse=ok".to_string()]);
+    assert_eq!(world.spouse(0).unwrap(), Some(1));
+}

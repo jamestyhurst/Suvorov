@@ -212,3 +212,19 @@ decision is reversed, add a new entry that names the one it replaces.
   chose Rune over the other embeddable languages because he prefers the name.
 - **Source of the idea:** James
 - **Decided by:** James
+
+### 2026-10-03 — Rune world API is a binding, not a second world
+
+- **Decided:** Scripts may call `world::date_text` and `world::contract_marriage`.
+  Those are Rust functions installed into the Rune context. `contract_marriage`
+  returns `refused` unless Marriage is enabled, and the world applies the pair
+  only after `on_fire` returns. The script does not receive the `World` struct.
+- **Alternatives:** Pass the whole world into Rune; let the script mutate persons
+  directly; keep scripts unable to see the world.
+- **Why:** James (2026-10-03, iPhone) asked what a Rune world API means and told
+  the session to add the slice. Binding is the word Rune uses for installing a
+  native function, and the word this engine already uses for attaching a script.
+- **Source of the idea:** James; Rune (`Module::function`); Clausewitz (script
+  effects call engine commands, they do not own the gamestate)
+- **Decided by:** James (do the slice); Grok from iPhone (two functions, command
+  applied after the call)

@@ -52,3 +52,53 @@ fn scripting_mode_still_refuses_marriage() {
         Err(Error::FeatureDisabled(_))
     ));
 }
+
+#[test]
+fn a_script_reads_the_world_date_through_the_binding() {
+    let mut world = world();
+    world
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { world::date_text() }",
+        )
+        .unwrap();
+    world
+        .schedule_event_with_effects(
+            Date::new(1001, 1, 2),
+            "pulse",
+            vec![Effect::RunScript("on_pulse".into())],
+        )
+        .unwrap();
+    world.advance_one_day();
+    assert_eq!(
+        world.drain_fired_scripts(),
+        vec!["on_pulse=1001-1-2".to_string()]
+    );
+}
+
+#[test]
+fn a_script_cannot_marry_when_marriage_is_off() {
+    let mut world = world();
+    world
+        .add_person(Person::new(vec!["Birch".into()], vec![0], Date::new(1000, 1, 1), 0, 0))
+        .unwrap();
+    world
+        .bind_script(
+            "on_pulse",
+            "pub fn on_fire(year, month, day) { world::contract_marriage(0, 1) }",
+        )
+        .unwrap();
+    world
+        .schedule_event_with_effects(
+            Date::new(1001, 1, 2),
+            "pulse",
+            vec![Effect::RunScript("on_pulse".into())],
+        )
+        .unwrap();
+    world.advance_one_day();
+    assert_eq!(
+        world.drain_fired_scripts(),
+        vec!["on_pulse=refused".to_string()]
+    );
+    assert!(matches!(world.spouse(0), Err(Error::FeatureDisabled(_))));
+}

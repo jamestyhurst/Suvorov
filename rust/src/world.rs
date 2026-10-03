@@ -462,8 +462,20 @@ impl World {
             Effect::RunScript(name) => {
                 if let Some((_, script)) = self.scripts.iter().find(|(existing, _)| existing == &name) {
                     let today = self.current_date;
-                    match script.call_on_fire(today.year, today.month, today.day) {
-                        Ok(value) => self.fired_scripts.push(format!("{name}={value}")),
+                    let view = crate::script::ScriptView {
+                        year: today.year,
+                        month: today.month,
+                        day: today.day,
+                        marriage_enabled: self.features.contains(Feature::Marriage),
+                        person_count: self.persons.len() as u32,
+                    };
+                    match script.call_on_fire(view) {
+                        Ok((value, command)) => {
+                            self.fired_scripts.push(format!("{name}={value}"));
+                            if let Some((a, b)) = command.marry {
+                                let _ = self.contract_marriage(a, b);
+                            }
+                        }
                         Err(err) => self.fired_scripts.push(format!("{name}!{err}")),
                     }
                 }
