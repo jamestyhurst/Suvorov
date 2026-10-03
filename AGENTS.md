@@ -54,6 +54,11 @@ and, later the same day:
 > I'm not as used to reading C++ as I am reading Python, but C++ is probably a better game
 > engine language. This might be a reasonable opportunity for reading C++
 
+Language is no longer open. James (2026-10-03, iPhone): the engine is Rust. The
+2026-09-18 C++ quotes stay as history. Optional features and the script seam are
+in `docs/2026-10-03-rust-canonical.md`.
+
+
 ## Environment
 
 - Windows school PC with **no admin rights**. Never use anything that triggers UAC, writes to

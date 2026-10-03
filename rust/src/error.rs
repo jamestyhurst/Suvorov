@@ -5,12 +5,15 @@ use std::fmt;
 pub enum Error {
     InvalidArgument(&'static str),
     OutOfRange(&'static str),
+    FeatureDisabled(&'static str),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::InvalidArgument(msg) | Error::OutOfRange(msg) => f.write_str(msg),
+            Error::InvalidArgument(msg) | Error::OutOfRange(msg) | Error::FeatureDisabled(msg) => {
+                f.write_str(msg)
+            }
         }
     }
 }

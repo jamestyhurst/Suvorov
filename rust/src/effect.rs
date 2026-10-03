@@ -10,4 +10,6 @@ pub enum Effect {
         location_id: u32,
         owner: Option<u32>,
     },
+    /// Name of a bound script. The tick records the name; it does not run the body.
+    RunScript(String),
 }

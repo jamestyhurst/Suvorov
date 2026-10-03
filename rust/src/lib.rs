@@ -10,6 +10,7 @@
 pub mod date;
 pub mod effect;
 pub mod error;
+pub mod features;
 pub mod load;
 pub mod person;
 pub mod world;
@@ -20,6 +21,9 @@ mod python;
 pub use date::{biological_age, Date};
 pub use effect::Effect;
 pub use error::{Error, Result};
+pub use features::{
+    profile_crusader_kings_like, profile_hearts_of_iron_like, Feature, FeatureSet, GameProfile,
+};
 pub use load::{world_from_records, CharacterRecord, LoadedWorld, TitleRecord};
 pub use person::Person;
 pub use world::World;

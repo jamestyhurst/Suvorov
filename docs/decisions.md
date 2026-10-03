@@ -175,3 +175,23 @@ decision is reversed, add a new entry that names the one it replaces.
   Clausewitz history files keep the dead; PR #7 suggested next step
 - **Decided by:** Grok (Zhantianzhe), on James's instruction (2026-10-03, session 2) to
   continue the Rust rewrite
+
+### 2026-10-03 — Rust is canonical; features are opt-in; scripts are named, not run
+
+- **Decided:** The engine language is Rust. This confirms the 2026-09-30 "Rust as the
+  implementation language" entry and replaces the open-language sentence in `AGENTS.md`.
+  C++ on draft PR #2 stays historical; new engine work lands in `rust/`. Optional
+  capabilities are a `FeatureSet` on `World`: Marriage, Titles, Inheritance, Scripting.
+  A Crusader Kings-like profile enables all four. A Hearts of Iron-like profile enables
+  Scripting only. `Effect::RunScript` records a bound script name; the tick does not
+  interpret the body. Inheritance implies Titles. A bare `World::new` enables nothing
+  optional.
+- **Alternatives:** Keep C++ as the core and use the compiler there; always-on marriage
+  and titles; embed Rhai or Lua in this slice.
+- **Why:** James (2026-10-03, iPhone): start from scratch in Rust so the compiler
+  complements unsupervised agents; Clausewitz ran both Hearts of Iron and Crusader Kings,
+  so marriage, titles, and inheritance must be opt-in; a scripting language is in scope
+  where Rust is the wrong tool, but not inside every function and not for every game.
+- **Source of the idea:** James (language and opt-in); Clausewitz (one engine, many
+  games, plaintext script beside the core)
+- **Decided by:** James

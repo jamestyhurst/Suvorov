@@ -15,4 +15,4 @@ cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 ```
 
-Last updated 2026-09-30.
+Last updated 2026-10-03. Engine language: Rust (James, iPhone).

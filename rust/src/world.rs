@@ -1,7 +1,14 @@
 use crate::date::{biological_age, Date};
 use crate::effect::Effect;
 use crate::error::{Error, Result};
+use crate::features::{Feature, FeatureSet, GameProfile};
 use crate::person::Person;
+
+struct Title {
+    name: String,
+    holder: Option<u32>,
+    heir: Option<u32>,
+}
 
 struct ScheduledEvent {
     date: Date,
@@ -18,6 +25,11 @@ pub struct World {
     owners: Vec<Option<u32>>,
     persons: Vec<Person>,
     death_dates: Vec<Option<Date>>,
+    spouses: Vec<Option<u32>>,
+    titles: Vec<Title>,
+    scripts: Vec<(String, String)>,
+    fired_scripts: Vec<String>,
+    features: FeatureSet,
     scheduled: Vec<ScheduledEvent>,
     fired: Vec<String>,
 }
@@ -36,9 +48,48 @@ impl World {
             owners: Vec::new(),
             persons: Vec::new(),
             death_dates: Vec::new(),
+            spouses: Vec::new(),
+            titles: Vec::new(),
+            scripts: Vec::new(),
+            fired_scripts: Vec::new(),
+            features: FeatureSet::none(),
             scheduled: Vec::new(),
             fired: Vec::new(),
         })
+    }
+
+    /// Same as `new`, with a game's optional capabilities already enabled.
+    pub fn with_features(
+        year: i32,
+        month: i32,
+        day: i32,
+        features: FeatureSet,
+    ) -> Result<Self> {
+        let mut world = Self::new(year, month, day)?;
+        world.features = features;
+        Ok(world)
+    }
+
+    /// Build from a named game profile. The profile chooses features; the engine does not.
+    pub fn for_profile(year: i32, month: i32, day: i32, profile: &GameProfile) -> Result<Self> {
+        Self::with_features(year, month, day, profile.features.clone())
+    }
+
+    pub fn features(&self) -> &FeatureSet {
+        &self.features
+    }
+
+    fn require(&self, feature: Feature) -> Result<()> {
+        if self.features.contains(feature) {
+            return Ok(());
+        }
+        let name = match feature {
+            Feature::Marriage => "Marriage is not enabled for this game",
+            Feature::Titles => "Titles are not enabled for this game",
+            Feature::Inheritance => "Inheritance is not enabled for this game",
+            Feature::Scripting => "Scripting is not enabled for this game",
+        };
+        Err(Error::FeatureDisabled(name))
     }
 
     pub fn add_polity(&mut self, name: impl Into<String>) -> Result<u32> {
@@ -168,7 +219,131 @@ impl World {
         }
         self.persons.push(person);
         self.death_dates.push(None);
+        self.spouses.push(None);
         Ok((self.persons.len() - 1) as u32)
+    }
+
+    /// Pair two living persons. Refused when Marriage is off.
+    pub fn contract_marriage(&mut self, a: u32, b: u32) -> Result<()> {
+        self.require(Feature::Marriage)?;
+        self.require_living(a)?;
+        self.require_living(b)?;
+        if a == b {
+            return Err(Error::InvalidArgument("A person cannot marry themselves"));
+        }
+        if self.spouses[a as usize].is_some() || self.spouses[b as usize].is_some() {
+            return Err(Error::InvalidArgument("Person is already married"));
+        }
+        self.spouses[a as usize] = Some(b);
+        self.spouses[b as usize] = Some(a);
+        Ok(())
+    }
+
+    pub fn spouse(&self, person_id: u32) -> Result<Option<u32>> {
+        self.require(Feature::Marriage)?;
+        self.spouses
+            .get(person_id as usize)
+            .copied()
+            .ok_or(Error::OutOfRange("Person id does not exist"))
+    }
+
+    /// Create a named title. Refused when Titles is off. Holder, if set, must be alive.
+    pub fn create_title(&mut self, name: impl Into<String>, holder: Option<u32>) -> Result<u32> {
+        self.require(Feature::Titles)?;
+        let name = name.into();
+        if name.is_empty() {
+            return Err(Error::InvalidArgument("Title name cannot be empty"));
+        }
+        if let Some(person_id) = holder {
+            self.require_living(person_id)?;
+        }
+        self.titles.push(Title {
+            name,
+            holder,
+            heir: None,
+        });
+        Ok((self.titles.len() - 1) as u32)
+    }
+
+    pub fn title_holder(&self, title_id: u32) -> Result<Option<u32>> {
+        self.require(Feature::Titles)?;
+        self.titles
+            .get(title_id as usize)
+            .map(|title| title.holder)
+            .ok_or(Error::OutOfRange("Title id does not exist"))
+    }
+
+    pub fn title_name(&self, title_id: u32) -> Result<&str> {
+        self.require(Feature::Titles)?;
+        self.titles
+            .get(title_id as usize)
+            .map(|title| title.name.as_str())
+            .ok_or(Error::OutOfRange("Title id does not exist"))
+    }
+
+    /// Name who receives this title when the holder dies. Refused when Inheritance is off.
+    pub fn designate_heir(&mut self, title_id: u32, heir: u32) -> Result<()> {
+        self.require(Feature::Inheritance)?;
+        if title_id as usize >= self.titles.len() {
+            return Err(Error::OutOfRange("Title id does not exist"));
+        }
+        self.require_living(heir)?;
+        self.titles[title_id as usize].heir = Some(heir);
+        Ok(())
+    }
+
+    /// Store a script body under `name`. The core never evaluates `body`.
+    pub fn bind_script(&mut self, name: impl Into<String>, body: impl Into<String>) -> Result<()> {
+        self.require(Feature::Scripting)?;
+        let name = name.into();
+        if name.is_empty() {
+            return Err(Error::InvalidArgument("Script name cannot be empty"));
+        }
+        let body = body.into();
+        if let Some(slot) = self.scripts.iter_mut().find(|(existing, _)| existing == &name) {
+            slot.1 = body;
+        } else {
+            self.scripts.push((name, body));
+        }
+        Ok(())
+    }
+
+    pub fn script_body(&self, name: &str) -> Result<Option<&str>> {
+        self.require(Feature::Scripting)?;
+        Ok(self
+            .scripts
+            .iter()
+            .find(|(existing, _)| existing == name)
+            .map(|(_, body)| body.as_str()))
+    }
+
+    /// Script names fired since the last drain, in schedule order. Bodies are not run.
+    pub fn drain_fired_scripts(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.fired_scripts)
+    }
+
+    fn require_living(&self, person_id: u32) -> Result<()> {
+        if !self.is_alive(person_id)? {
+            return Err(Error::InvalidArgument("Person is dead"));
+        }
+        Ok(())
+    }
+
+    fn transfer_titles_on_death(&mut self, person_id: u32) {
+        if !self.features.contains(Feature::Inheritance) {
+            return;
+        }
+        for title in &mut self.titles {
+            if title.holder != Some(person_id) {
+                continue;
+            }
+            let heir = title.heir.take();
+            if let Some(heir_id) = heir {
+                if heir_id != person_id && self.death_dates.get(heir_id as usize) == Some(&None) {
+                    title.holder = Some(heir_id);
+                }
+            }
+        }
     }
 
     pub fn person(&self, person_id: u32) -> Result<&Person> {
@@ -262,6 +437,16 @@ impl World {
                 }
                 Ok(())
             }
+            Effect::RunScript(name) => {
+                self.require(Feature::Scripting)?;
+                if name.is_empty() {
+                    return Err(Error::InvalidArgument("Script name cannot be empty"));
+                }
+                if !self.scripts.iter().any(|(existing, _)| existing == name) {
+                    return Err(Error::InvalidArgument("Script is not bound"));
+                }
+                Ok(())
+            }
         }
     }
 
@@ -272,6 +457,11 @@ impl World {
             }
             Effect::SetLocationOwner { location_id, owner } => {
                 let _ = self.set_location_owner(location_id, owner);
+            }
+            Effect::RunScript(name) => {
+                if self.scripts.iter().any(|(existing, _)| existing == &name) {
+                    self.fired_scripts.push(name);
+                }
             }
         }
     }
@@ -303,6 +493,16 @@ impl World {
             return Err(Error::InvalidArgument("Person is already dead"));
         }
         *slot = Some(date);
+        self.transfer_titles_on_death(person_id);
+        if self.features.contains(Feature::Marriage) {
+            if let Some(spouse_id) = self.spouses[person_id as usize].take() {
+                if let Some(back) = self.spouses.get_mut(spouse_id as usize) {
+                    if *back == Some(person_id) {
+                        *back = None;
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
